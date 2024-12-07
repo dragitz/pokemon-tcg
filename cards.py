@@ -48,11 +48,12 @@ For the logic:
 
 #class AttackId
 
+import math
 import random
 import time
 from utils import *
 
-MAX_SIMULATED_GAMES = 1000
+MAX_SIMULATED_GAMES = 10000
 
 
 logic = GameLogic()
@@ -94,6 +95,8 @@ def start_game():
         
         board.Player1.deck = []
         board.Player2.deck = []
+        
+        #
         
         
         # give cards to each player
@@ -144,8 +147,9 @@ def start_game():
         #print("Initial cards: ",len(board.Player2.cards))
 
         gameFinished = False
+        turns = 0
         while not gameFinished:
-            
+            turns += 1
             # assign player turn
             if board.PlayerTurn == 1:
                 player = board.Player2
@@ -154,11 +158,6 @@ def start_game():
                 player = board.Player1
                 opponent = board.Player2
             
-            # contition stop
-            if player.stats.gold_wins >= 1000:
-                games = MAX_SIMULATED_GAMES
-                break
-
             # stats
             player.stats.total_turns += 1
 
@@ -172,6 +171,7 @@ def start_game():
                 # place card logic here
                 player.placeCard()
             
+            # define active card
             active_card = player.Terrain[0]
             active_card_rival = opponent.Terrain[0]
 
@@ -265,6 +265,13 @@ def start_game():
         
         games += 1
 
+        # end of game, store number of turns
+
+        board.Player1.stats.games_turns.append(turns)
+        board.Player2.stats.games_turns.append(turns)
+
+        
+
     # end of simulation, print stats
     for i in range(0,2):
         if i == 0:
@@ -290,6 +297,9 @@ def start_game():
         print(" ","total_monsters_killed: ",statistics.total_monsters_killed)
         print(" ","total_monsters_lost: ",statistics.total_monsters_lost)
         print(" ","total_turns: ",statistics.total_turns)
+        
+        average = sum(statistics.games_turns)/len(statistics.games_turns)
+        print("AVG turns x game: ",average)
 
         print("Ties: ", MAX_SIMULATED_GAMES - board.Player2.stats.wins - board.Player1.stats.wins)
 

@@ -209,6 +209,7 @@ class PlayerStats:
         self.total_energy_placed = 0
         self.total_items_used = 0
 
+        self.games_turns = []
 
 
 
