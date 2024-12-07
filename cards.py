@@ -52,16 +52,19 @@ import random
 import time
 from utils import *
 
-MAX_SIMULATED_GAMES = 2000
+MAX_SIMULATED_GAMES = 10000
 
 
 logic = GameLogic()
 
 best_rateo = 0.0
-RATEO = 0.01
+RATEO = 1.00
+
+IMPROVEMENTS = 0
+IMPROVEMENTS_MAX = 7
 
 def start_game():
-    global best_rateo, RATEO
+    global best_rateo, RATEO, IMPROVEMENTS, IMPROVEMENTS_MAX
 
     games = 0
 
@@ -69,12 +72,12 @@ def start_game():
     game_logic = GameLogic()
     
     # create players
-    player1 = Player(0,"bot00",PlayerCard())
-    player2 = Player(1,"bot01",PlayerCard())
+    player1 = Player(0,"bot00",PlayerStats())
+    player2 = Player(1,"bot01",PlayerStats())
     board.spawnPlayers(player1,player2)
         
-    
-    INITIAL_CARDS_GIVEN = 20
+    DECK_SIZE = 20
+    INITIAL_CARDS_GIVEN = 5
 
 
     while games < MAX_SIMULATED_GAMES:
@@ -98,6 +101,7 @@ def start_game():
                     IF HEADS >= {REQUIRED_HEADS} THEN ATTACK*HEADS
                     """,
                     move_type="Attack",
+                    energy_cost=random.randint(0,4),
                     damage=random.choice([20,25,30,35,45,50,55,60,70,80,90]),
 
                     coinflips=TOTAL_COINFLIPS,
@@ -119,6 +123,7 @@ def start_game():
             board.Player2.stats.total_games_first += 1
         else:
             board.Player1.stats.total_games_first += 1
+        
         # reset board
         board.TotalTurns = 0
 
@@ -136,11 +141,16 @@ def start_game():
                 player = board.Player1
                 opponent = board.Player2
             
+            # give energy
+            if board.TotalTurns > 1:
+                player.energy = 1
+
             # check if top card needs to be placed on board slot 0 (main pokemon)
             if player.Terrain[0] == None:
-                # place card
-                player.placeCard(0, 0)
+                # place card logic here
+                player.placeCard()
             
+            # check if we have used our free energy
             # try attacking once card has been placed, given the turn id is greater than 0 (can not attack on the first turn) + can not attack empty slots
             if board.TotalTurns > 0 and player.Terrain[0] is not None and opponent.Terrain[0] is not None:
                 #print("attack")
@@ -195,8 +205,11 @@ def start_game():
                             player.stats.gold_wins += 1
                         elif opponent.localGameTurnWins == 1:
                             player.stats.silver_wins += 1
+                        elif opponent.localGameTurnWins == 2:
+                            player.stats.bronze_wins += 1
                         
-                        if starting_player == board.PlayerTurn:
+                        # track how many times first player won
+                        if starting_player == player.id:
                             player.stats.total_games_first_won += 1
                             
                         gameFinished = True
@@ -219,41 +232,32 @@ def start_game():
         games += 1
 
     # end of simulation, print stats
-    tmpBestRateo = 0.0
     for i in range(0,2):
         if i == 0:
             statistics = board.Player1.stats
-            print("P1 Stats:")
+            name = board.Player1.name
         else:
             statistics = board.Player2.stats
-            print("P2 Stats:")
-    
-        #best_rateo = (statistics.gold_wins + 1) / (statistics.silver_wins + 1)
-        
-        win_rate_as_first = statistics.total_games_first_won / statistics.total_games_first * 100
-        overall_win_rate = statistics.wins / MAX_SIMULATED_GAMES * 100
-        impact = win_rate_as_first - overall_win_rate        
-        print(">> ", impact)
-        if impact >= RATEO:
-            best_rateo = 30
-
-            print(" ","Wins: ",statistics.wins)
-            print(" ","Games started as first player: ",statistics.total_games_first)
-            print(" ","total_damage_inflicted: ",statistics.total_damage_inflicted)
-            print(" ","total_damage_received: ",statistics.total_damage_received)
-            print(" ","total_coin_tosses: ",statistics.total_coin_tosses)
-            print(" ","total_coin_tosses_wins: ",statistics.total_coin_tosses_wins)
-            print(" ","gold_wins: ",statistics.gold_wins)
-            print(" ","silver_wins: ",statistics.silver_wins)
-            print(" ","total_monsters_killed: ",statistics.total_monsters_killed)
-            print(" ","total_monsters_lost: ",statistics.total_monsters_lost)
-
+            name = board.Player2.name
             
-
-            print("Statistical diff: ",impact)
     
-    print("Ties: ", MAX_SIMULATED_GAMES - board.Player2.stats.wins - board.Player1.stats.wins)
+
+        print(name +" Stats:")
+
+        print(" ","Wins: ",statistics.wins)
+        print(" ","Games started as first player: ",statistics.total_games_first)
+        print(" ","total_damage_inflicted: ",statistics.total_damage_inflicted)
+        print(" ","total_damage_received: ",statistics.total_damage_received)
+        print(" ","total_coin_tosses: ",statistics.total_coin_tosses)
+        print(" ","total_coin_tosses_wins: ",statistics.total_coin_tosses_wins)
+        print(" ","gold_wins: ",statistics.gold_wins)
+        print(" ","silver_wins: ",statistics.silver_wins)
+        print(" ","bronze_wins: ",statistics.bronze_wins)
+        print(" ","total_monsters_killed: ",statistics.total_monsters_killed)
+        print(" ","total_monsters_lost: ",statistics.total_monsters_lost)
+
+        print("Ties: ", MAX_SIMULATED_GAMES - board.Player2.stats.wins - board.Player1.stats.wins)
 
 
-while best_rateo < RATEO:
-    start_game()
+
+start_game()

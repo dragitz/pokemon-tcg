@@ -22,7 +22,7 @@ class PokemonType(Enum):
     SUPPORTER = "Supporter"
 
 class PokemonCard:
-    def __init__(self, id:int, isEx:bool, stage:int, maxHp:int, moves:dict):
+    def __init__(self, id:int, isEx:bool, stage:int, maxHp:int, moves:dict, energy=0):
 
         self.id = id
 
@@ -35,6 +35,9 @@ class PokemonCard:
         self.type = ""
         self.status_effects = []
         self.moves = moves
+        
+        self.isBasic = True
+        self.energy = energy
         self.weakness = ""
 
         self.retreatCost = 1
@@ -149,7 +152,7 @@ class GameLogic:
 
 
 class Move:
-    def __init__(self, logic, move_type, damage=0, coinflips=0, debuffs=[]):
+    def __init__(self, logic, move_type, energy_cost=1, damage=0, coinflips=0, debuffs=[]):
         self.logic = logic
         self.move_type = move_type
         
@@ -157,7 +160,8 @@ class Move:
         self.coinflips = coinflips
         self.debuffs = debuffs
         self.cards_drawn = 0
-        
+        self.energy_cost = energy_cost
+
         # do not edit
         self._TotalDamage = 0
         self._TotalHealing = 0
@@ -168,7 +172,7 @@ class Move:
         return move_data
 
 
-class PlayerCard:
+class PlayerStats:
     def __init__(self):
         self.wins = 0
         self.losses = 0
@@ -180,6 +184,7 @@ class PlayerCard:
         
         self.gold_wins = 0
         self.silver_wins = 0
+        self.bronze_wins = 0
 
         self.total_damage_inflicted = 0
         self.total_damage_received = 0
@@ -201,21 +206,32 @@ class PlayerCard:
 
 
 class Player:
-    def __init__(self, id:int, name:str, stats:PlayerCard):
+    def __init__(self, id:int, name:str, stats:PlayerStats):
         self.id = id
         self.name = name
         self.stats = stats
         self.cards = []
         self.Terrain = [None, None, None, None]
 
-
+        self.energy = 0
         self.localGameTurnWins = 0
     
-    def placeCard(self, id: int, slot: int):
-        card = self.cards.pop(id)
-        self.Terrain[slot] = card
+    def placeCard(self):
+        
+        # Basic logic
+        basic_in_hand = self.getBasicCardsInHand()
+        index = basic_in_hand.index(random.choice(basic_in_hand))
+        
+        card = self.cards.pop(index)
+        self.Terrain[0] = card      # <-- hardcoded slot
 
         #print("card placed by player id: ",self.id)
+    def getBasicCardsInHand(self):
+        valid = []
+        for i in range(len(self.cards)):
+            if self.cards[i].isBasic:
+                valid.append(self.cards[i])
+        return valid
     
     def removeCard(self, id:int):
         self.cards.pop(0)
