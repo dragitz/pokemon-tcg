@@ -52,7 +52,7 @@ import random
 import time
 from utils import *
 
-MAX_SIMULATED_GAMES = 10000
+MAX_SIMULATED_GAMES = 1000
 
 
 logic = GameLogic()
@@ -172,72 +172,84 @@ def start_game():
                 # place card logic here
                 player.placeCard()
             
+            active_card = player.Terrain[0]
+            active_card_rival = opponent.Terrain[0]
+
+            # give energy to the  active card
+            if player.energy > 0:
+                active_card.energy += 1
+                player.energy = 0
             # check if we have used our free energy
             # try attacking once card has been placed, given the turn id is greater than 0 (can not attack on the first turn) + can not attack empty slots
             if board.TotalTurns > 0 and player.Terrain[0] is not None and opponent.Terrain[0] is not None:
-                #print("attack")
-                card1 = player.Terrain[0]
-                card2 = opponent.Terrain[0]
+                
                 
                 # local player is always the attacker
                 # pick a random move from the card
-                move = random.choice(card1.moves)
+                # need a solid way of chosing a move
+                valid_moves = active_card.getValidMoves()
+                if len(valid_moves) > 0:
 
-                # apply buffs,debuffs on the move
-                game_logic.flip_coin(move.coinflips)
-                move = move.execute_logic(game_logic)
+                    move = random.choice(active_card.moves)
 
-                # stats
-                player.stats.total_coin_tosses += move.coinflips
-                player.stats.total_coin_tosses_wins += game_logic.variables["HEADS"]
-                
-                card2 = card2.applyDamage(move._TotalDamage)
-                #print("hp",card2.hp, move.damage, move._TotalDamage)
+                    # apply buffs,debuffs on the move
+                    game_logic.flip_coin(move.coinflips)
+                    move = move.execute_logic(game_logic)
 
-                # Update stats
-                player.stats.total_damage_inflicted += move._TotalDamage
-                opponent.stats.total_damage_received += move._TotalDamage
-
-                if card2.hp <= 0:
-                    
                     # stats
-                    player.stats.total_monsters_killed += 1
-                    opponent.stats.total_monsters_lost += 1
+                    player.stats.total_coin_tosses += move.coinflips
+                    player.stats.total_coin_tosses_wins += game_logic.variables["HEADS"]
+                    
+                    active_card_rival = active_card_rival.applyDamage(move._TotalDamage)
+                    #print("hp",card2.hp, move.damage, move._TotalDamage)
 
-                    if card2.isEx:
+                    # Update stats
+                    player.stats.total_damage_inflicted += move._TotalDamage
+                    opponent.stats.total_damage_received += move._TotalDamage
+
+                    if active_card_rival.hp <= 0:
+                        
+                        # stats
+                        player.stats.total_monsters_killed += 1
+                        opponent.stats.total_monsters_lost += 1
+
+                        if active_card_rival.isEx:
+                            player.localGameTurnWins += 1
+
+                            player.stats.total_ex_killed += 1
+                            opponent.stats.total_ex_lost += 1
+                            
+
+                        # card got killed, remove it from terrain and put another one
+                        opponent.Terrain[0] = None #tmp hack for testing, need to detect proper card slot
+
+                        # also increase score by 1 to localplayer
                         player.localGameTurnWins += 1
 
-                        player.stats.total_ex_killed += 1
-                        opponent.stats.total_ex_lost += 1
-                        
-
-                    # card got killed, remove it from terrain and put another one
-                    opponent.Terrain[0] = None #tmp hack for testing, need to detect proper card slot
-
-                    # also increase score by 1 to localplayer
-                    player.localGameTurnWins += 1
-
-                    # check if current player has won the game
-                    if player.localGameTurnWins >= 3:
-                        player.stats.wins += 1
-                        
-                        
-                        # game win stats
-                        if opponent.localGameTurnWins == 0:
-                            player.stats.gold_wins += 1
-                        elif opponent.localGameTurnWins == 1:
-                            player.stats.silver_wins += 1
-                        elif opponent.localGameTurnWins == 2:
-                            player.stats.bronze_wins += 1
-                        
-                        # track how many times initial player has won (see bias)
-                        if starting_player == player.id:
-                            player.stats.total_games_first_won += 1
+                        # check if current player has won the game
+                        if player.localGameTurnWins >= 3:
+                            player.stats.wins += 1
                             
-                        gameFinished = True
-                        break
+                            
+                            # game win stats
+                            if opponent.localGameTurnWins == 0:
+                                player.stats.gold_wins += 1
+                            elif opponent.localGameTurnWins == 1:
+                                player.stats.silver_wins += 1
+                            elif opponent.localGameTurnWins == 2:
+                                player.stats.bronze_wins += 1
+                            
+                            # track how many times initial player has won (see bias)
+                            if starting_player == player.id:
+                                player.stats.total_games_first_won += 1
+                                
+                            gameFinished = True
+                            break
+                
+
             
             # check if no cards can be player, (end game)
+            # this is a quick hax, will code something else in the future
             if len(player.deck) == 0 or len(opponent.deck) == 0:
                 gameFinished = True
                 break

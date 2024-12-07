@@ -46,6 +46,13 @@ class PokemonCard:
     def applyDamage(self, amount:int):
         self.hp -= amount
         return self
+    
+    def getValidMoves(self):
+        valid_moves = []
+        for move in self.moves:
+            if self.energy >= move.energy_cost:
+                valid_moves.append(move)
+        return valid_moves
 
 
 
