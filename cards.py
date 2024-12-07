@@ -63,6 +63,7 @@ RATEO = 1.00
 IMPROVEMENTS = 0
 IMPROVEMENTS_MAX = 7
 
+
 def start_game():
     global best_rateo, RATEO, IMPROVEMENTS, IMPROVEMENTS_MAX
 
@@ -79,8 +80,9 @@ def start_game():
     DECK_SIZE = 20
     INITIAL_CARDS_GIVEN = 5
 
-
+    
     while games < MAX_SIMULATED_GAMES:
+        
         
         # reset scores
         board.Player1.localGameTurnWins = 0
@@ -90,9 +92,13 @@ def start_game():
         board.Player1.cards = []
         board.Player2.cards = []
         
+        board.Player1.deck = []
+        board.Player2.deck = []
+        
+        
         # give cards to each player
         for i in range(0,2):
-            for q in range(0,INITIAL_CARDS_GIVEN):
+            for q in range(0,DECK_SIZE):
 
                 TOTAL_COINFLIPS = random.randint(0,3) 
                 REQUIRED_HEADS = random.randint(0,TOTAL_COINFLIPS)
@@ -110,14 +116,21 @@ def start_game():
                 card = PokemonCard(q,False,0,random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]),moves)
                 
                 if i == 0:
-                    board.Player1.cards.append(card)
+                    board.Player1.deck.append(card)
                 else:
-                    board.Player2.cards.append(card)
+                    board.Player2.deck.append(card)
+        
+        # shuffle deck
+        board.Player1.shuffleDeck()
+        board.Player2.shuffleDeck()
 
+        # give initial cards
+        board.Player1.drawCard(INITIAL_CARDS_GIVEN)
+        board.Player2.drawCard(INITIAL_CARDS_GIVEN)
+        
         # who begins, track it
         board.PlayerTurn = random.randint(0,1)
-
-        starting_player = board.PlayerTurn
+        starting_player:int = board.PlayerTurn
 
         if board.PlayerTurn == 1:
             board.Player2.stats.total_games_first += 1
@@ -141,9 +154,18 @@ def start_game():
                 player = board.Player1
                 opponent = board.Player2
             
+            # contition stop
+            if player.stats.gold_wins >= 1000:
+                games = MAX_SIMULATED_GAMES
+                break
+
+            # stats
+            player.stats.total_turns += 1
+
             # give energy
-            if board.TotalTurns > 1:
+            if board.TotalTurns >= 1:
                 player.energy = 1
+                player.drawCard(1)
 
             # check if top card needs to be placed on board slot 0 (main pokemon)
             if player.Terrain[0] == None:
@@ -200,7 +222,7 @@ def start_game():
                         player.stats.wins += 1
                         
                         
-                        # game stats
+                        # game win stats
                         if opponent.localGameTurnWins == 0:
                             player.stats.gold_wins += 1
                         elif opponent.localGameTurnWins == 1:
@@ -208,7 +230,7 @@ def start_game():
                         elif opponent.localGameTurnWins == 2:
                             player.stats.bronze_wins += 1
                         
-                        # track how many times first player won
+                        # track how many times initial player has won (see bias)
                         if starting_player == player.id:
                             player.stats.total_games_first_won += 1
                             
@@ -216,7 +238,7 @@ def start_game():
                         break
             
             # check if no cards can be player, (end game)
-            if len(player.cards) == 0 or len(opponent.cards) == 0:
+            if len(player.deck) == 0 or len(opponent.deck) == 0:
                 gameFinished = True
                 break
             
@@ -255,6 +277,7 @@ def start_game():
         print(" ","bronze_wins: ",statistics.bronze_wins)
         print(" ","total_monsters_killed: ",statistics.total_monsters_killed)
         print(" ","total_monsters_lost: ",statistics.total_monsters_lost)
+        print(" ","total_turns: ",statistics.total_turns)
 
         print("Ties: ", MAX_SIMULATED_GAMES - board.Player2.stats.wins - board.Player1.stats.wins)
 
