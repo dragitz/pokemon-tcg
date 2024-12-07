@@ -275,30 +275,30 @@ def start_game():
     # end of simulation, print stats
     for i in range(0,2):
         if i == 0:
-            statistics = board.Player1.stats
+            stats = board.Player1.stats
             name = board.Player1.name
         else:
-            statistics = board.Player2.stats
+            stats = board.Player2.stats
             name = board.Player2.name
             
     
 
         print(name +" Stats:")
 
-        print(" ","Wins: ",statistics.wins)
-        print(" ","Games started as first player: ",statistics.total_games_first)
-        print(" ","total_damage_inflicted: ",statistics.total_damage_inflicted)
-        print(" ","total_damage_received: ",statistics.total_damage_received)
-        print(" ","total_coin_tosses: ",statistics.total_coin_tosses)
-        print(" ","total_coin_tosses_wins: ",statistics.total_coin_tosses_wins)
-        print(" ","gold_wins: ",statistics.gold_wins)
-        print(" ","silver_wins: ",statistics.silver_wins)
-        print(" ","bronze_wins: ",statistics.bronze_wins)
-        print(" ","total_monsters_killed: ",statistics.total_monsters_killed)
-        print(" ","total_monsters_lost: ",statistics.total_monsters_lost)
-        print(" ","total_turns: ",statistics.total_turns)
+        print(" ","Wins: ",stats.wins)
+        print(" ","Games started as first player: ",stats.total_games_first)
+        print(" ","total_damage_inflicted: ",stats.total_damage_inflicted)
+        print(" ","total_damage_received: ",stats.total_damage_received)
+        print(" ","total_coin_tosses: ",stats.total_coin_tosses)
+        print(" ","total_coin_tosses_wins: ",stats.total_coin_tosses_wins)
+        print(" ","gold_wins: ",stats.gold_wins)
+        print(" ","silver_wins: ",stats.silver_wins)
+        print(" ","bronze_wins: ",stats.bronze_wins)
+        print(" ","total_monsters_killed: ",stats.total_monsters_killed)
+        print(" ","total_monsters_lost: ",stats.total_monsters_lost)
+        print(" ","total_turns: ",stats.total_turns)
         
-        average = sum(statistics.games_turns)/len(statistics.games_turns)
+        average = sum(stats.games_turns)/len(stats.games_turns)
         print("AVG turns x game: ",average)
 
         print("Ties: ", MAX_SIMULATED_GAMES - board.Player2.stats.wins - board.Player1.stats.wins)
