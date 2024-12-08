@@ -58,11 +58,6 @@ MAX_SIMULATED_GAMES = 10000
 
 logic = GameLogic()
 
-best_rateo = 0.0
-RATEO = 1.00
-
-IMPROVEMENTS = 0
-IMPROVEMENTS_MAX = 7
 
 
 def start_game():
@@ -303,6 +298,6 @@ def start_game():
 
         print("Ties: ", MAX_SIMULATED_GAMES - board.Player2.stats.wins - board.Player1.stats.wins)
 
-
-
 start_game()
+
+# recreate meta pikachu deck for testing

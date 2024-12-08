@@ -21,6 +21,11 @@ class PokemonType(Enum):
     ITEM = "Item"
     SUPPORTER = "Supporter"
 
+class Energy:
+    def __init__(self, type:PokemonType, quantity=1):
+        self.type = type
+        self.quantity = quantity
+        
 class PokemonCard:
     def __init__(self, id:int, isEx:bool, stage:int, maxHp:int, moves:dict, energy=0):
 
