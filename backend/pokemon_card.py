@@ -8,7 +8,8 @@ class PokemonCard:
         
         self.maxHp = maxHp
         self.hp    = self.maxHp
-        
+        self.health_bar = 100
+
         self.type = ""
         self.status_effects = []
         self.moves = moves
@@ -19,9 +20,12 @@ class PokemonCard:
 
         self.retreatCost = 1
         self.rarity = 0
+
+        self.asset = ""
     
     def applyDamage(self, amount:int):
         self.hp -= amount
+        self.health_bar = self.hp / self.maxHp * 100    # update percentage
         return self
     
     def getValidMoves(self):
