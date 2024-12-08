@@ -1,0 +1,18 @@
+|-- /assets               # Store images, sounds, etc.
+|-- /backend              # Core game logic (no Pygame dependency)
+|   |-- __init__.py        # Initializes the backend package
+|   |-- game.py            # Main game class (handles game loop, state)
+|   |-- player.py          # Player class, stats, actions
+|   |-- pokemon_card.py    # Pokemon card class, moves, stats
+|   |-- move.py            # Move logic
+|   |-- game_state.py      # Game state management (e.g., turns, win conditions)
+|   |-- event_manager.py   # Event system (communication between game and UI)
+|-- /frontend             # Pygame UI
+|   |-- __init__.py        # Initializes the frontend package
+|   |-- ui.py             # Main Pygame window logic (event handling, rendering)
+|   |-- draw.py           # Drawing functions for cards, board, etc.
+|-- /network              # Networking logic for multiplayer
+|   |-- __init__.py        # Initializes network package
+|   |-- client.py          # Client-side logic (sending/receiving data)
+|   |-- server.py          # Server-side logic
+|-- main.py               # Entry point to start the game (or server/client)
