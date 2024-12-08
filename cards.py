@@ -301,3 +301,5 @@ def start_game():
 start_game()
 
 # recreate meta pikachu deck for testing
+#terrain color: #00bff9
+#slot color: #4dbaee
