@@ -1,5 +1,7 @@
 import random
-from player import *
+from .player import *
+from .move import *
+from .pokemon_card import *
 
 class GameLogic:
     def __init__(self):
@@ -104,7 +106,9 @@ class GameLogic:
 class Game:
     def __init__(self):
         self.game_id = 0
+        
         self.rules = Rules()
+        self.logic = GameLogic()
 
         self.PlayerTurn = 0
         self.TotalTurns = 0
@@ -115,32 +119,98 @@ class Game:
         self.Player2 = None
 
         self.gameFinished = False
-    
-    def createGame(self):
-        pass
+
+        self.GAMES = 0
+        self.MAX_SIMULATED_GAMES = 1000
     
     def createPlayers(self, Player1:Player, Player2:Player):
+        if Player1 == None:
+            print("Player1 is None")
+            return
+        
+        if Player2 == None:
+            print("Player2 is None")
+            return
+        
         self.Player1 = Player1
         self.Player2 = Player2
-
+    
+    def deletePlayers(self):
+        self.Player1 = None
+        self.Player2 = None
+        
     # soft reset the game, keep player statistics and current deck (both can be edited)
-    def resetGame(self):
-        pass
+    def softReset(self):
+        # reset scores
+        self.Player1.localGameTurnWins = 0
+        self.Player2.localGameTurnWins = 0
+
+        # setup players without resetting their data (stats)
+        self.Player1.cards = []
+        self.Player2.cards = []
+        
+        self.Player1.deck = []
+        self.Player2.deck = []
+
+        self.Player1.ActiveCard = None
+        self.Player1.Bench = [None, None, None]
+        
+        self.Player2.ActiveCard = None
+        self.Player2.Bench = [None, None, None]
+
 
     #####################################################
-    def shuffleDeck(self):
-        pass
+    def shuffleDeck(self, deck):
+        for i in range(len(deck)):
+            rand = random.randint(0, len(deck)-1)
+            deck[i], deck[rand] = deck[rand], deck[i]
+        return deck
+    
+    def shuffleSimple(self, deck):
+        return random.shuffle(deck)
 
-    def drawCard(self, amount:int):
-        pass
     
     def discardCard(self, player_id:int, slot:int):
         pass
     
+    # once I have a proper way to load a deck and a working card db, then I can load decks
+    # for now I'm going to use randomized/hardcoded cards
+    # see createFakeDeck() for a temp replacement
+    def loadDeck(self):
+        pass
+
+    def createFakeDeck(self):
+        fakeDeck = []
+        DECK_SIZE = self.rules.DECK_SIZE
+        for q in range(0,DECK_SIZE):
+                
+                # How many coinfilps the move does
+                TOTAL_COINFLIPS = random.randint(0,3) 
+                # how many attacks per head are required in order to make an attack
+                # this is just a test for the logic of the parser, i don't think there's such a card with similar conditions
+                REQUIRED_HEADS = random.randint(0, TOTAL_COINFLIPS) if TOTAL_COINFLIPS > 0 else 0
+                move = Move(
+                    logic=f"""
+                    IF HEADS >= {REQUIRED_HEADS} THEN ATTACK*HEADS
+                    """,
+                    move_type="Attack", # note: currently unused
+                    energy_cost=random.randint(0,4),
+                    damage=random.choice([20,25,30,35,45,50,55,60,70,80,90]),
+
+                    coinflips=TOTAL_COINFLIPS,
+                )
+                moves = [move]
+                card = PokemonCard(q,False,0,random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]),moves)
+                
+                fakeDeck.append(card)
+
+        return fakeDeck
+        
     #####################################################
 
     def giveEnergy(self, player_id:int):
         pass
+    
     
     def getActiveCard(self, player_id:int):
         pass
@@ -151,16 +221,41 @@ class Game:
     def getValidActions(self, player_id:int):
         pass
 
-    def setInitialPlayer(self, forced_id:int):
-        if not forced_id:
-            self.PlayerTurn = forced_id
-            self.starting_player = forced_id
+    def setInitialPlayer(self):
+        if self.rules.force_initial_player:
+            self.PlayerTurn = 0
+            self.starting_player = 0
         else:
-            self.PlayerTurn = random.randint(0,1)
-            self.starting_player = self.PlayerTurn
+            value:int = random.randint(0,1)
+            self.PlayerTurn = value
+            self.starting_player = value
     
     # The game will be played here
     def playGame(self):
+
+
+        while self.GAMES < self.MAX_SIMULATED_GAMES:
+
+            # Currently the reset function fully resets a deck to zero
+            # note: unsure how to change the behavior of this function, will see in the future
+            self.softReset()
+
+            # Create temp deck
+            # This is important until I code an actual deck (it's going to be a pain manually coding every card..)
+            self.Player1.deck = self.createFakeDeck()
+            self.Player2.deck = self.createFakeDeck()
+
+            # shuffle player's decks
+            self.Player1.deck = self.shuffleDeck(self.Player1.deck)
+            self.Player2.deck = self.shuffleDeck(self.Player2.deck)
+
+            # draw cards
+            self.Player1.drawCard(self.rules.INITIAL_CARDS_DRAWN)
+            self.Player2.drawCard(self.rules.INITIAL_CARDS_DRAWN)
+
+            # who begins, track it, set to true 
+            self.setInitialPlayer()
+
         pass
     
 
@@ -177,5 +272,9 @@ class Rules:
         self.maxTurns = 30
 
         self.DECK_SIZE = 20
-        self.INITIAL_CARDS_GIVEN = 5
+        self.INITIAL_CARDS_DRAWN = 5
         self.MAX_CARDS_IN_HAND = 10
+
+        self.force_initial_player = False
+
+

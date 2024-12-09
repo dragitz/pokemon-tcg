@@ -41,7 +41,7 @@ class Player:
         deck_amount = len(self.deck)
         if deck_amount <= 0:
             print(self.name, "couldn't draw a card (this error can only be triggered if drawing a card was selected as a valid action when it wasn't)")
-            print(self.valid_actions)
+            print("valid_actions: ",self.valid_actions)
             return
         
         # draw a maximum of n cards if the size doesn't match
