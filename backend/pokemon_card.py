@@ -41,7 +41,7 @@ class PokemonCard:
     
     def applyDamage(self, amount:int):
         self.hp -= amount
-        self.health_bar = self.hp / self.maxHp * 100    # update percentage
+        self.health_bar = self.hp / self.maxHp * 100
         return self
     
     def getValidMoves(self):

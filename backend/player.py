@@ -11,10 +11,13 @@ class Player:
         self.deck = []
         self.dead = []
 
-        self.Terrain = [None, None, None, None]
+        self.ActiveCard = None
+        self.Bench = [None, None, None]
 
         self.energy = 0
         self.localGameTurnWins = 0
+
+        self.valid_actions = []
     
     def placeCard(self):
         
@@ -37,7 +40,8 @@ class Player:
     def drawCard(self, amount:int):
         deck_amount = len(self.deck)
         if deck_amount <= 0:
-            print(self.name, "couldn't draw a card")
+            print(self.name, "couldn't draw a card (this error can only be triggered if drawing a card was selected as a valid action when it wasn't)")
+            print(self.valid_actions)
             return
         
         # draw a maximum of n cards if the size doesn't match
