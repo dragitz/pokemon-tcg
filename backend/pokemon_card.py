@@ -10,7 +10,7 @@ class Stages(Enum):
     
 
 class PokemonCard:
-    def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, moves:dict, type:PokemonType, retreat_cost = 1, energy=0):
+    def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, moves:dict, type:PokemonType, retreat_cost = 1, energy=0, asset_name = ""):
 
         self.id = id
 
@@ -28,14 +28,14 @@ class PokemonCard:
         
         # Buffs/Debuffs
 
-        # Extra info
+        # Dynamic data
         self.energy = energy
         self.placed_turn = 0
         self.retreatCost = retreat_cost
-        
+
+        # Other
         self.rarity = 0
-        
-        self.asset = ""
+        self.asset = "assets/"+asset_name
 
         
     
