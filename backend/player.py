@@ -49,12 +49,17 @@ class Player:
         for i in range(0,min(amount,len(self.deck))):
             self.cards.append(self.deck.pop(0))
 
-    def getBasicCardsInHand(self):
+    def getBasicCardsAvailable(self):
         valid = []
         
         for i in range(len(self.cards)):
-            if self.cards[i].isBasic:
+            if self.cards[i].stage == Stages.BASIC:
                 valid.append(self.cards[i])
+        
+        for i in range(len(self.Bench)):
+            if self.Bench[i].stage == Stages.BASIC:
+                valid.append(self.Bench[i])
+                
         return valid
     
     def removeCard(self, id:int):

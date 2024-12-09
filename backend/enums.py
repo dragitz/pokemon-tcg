@@ -1,6 +1,18 @@
 import random
 from enum import Enum
 
+class Actions(Enum):
+    SET_ENERGY   = 0
+    PLACE_ACTIVE = 1
+    PLACE_BENCH  = 2
+    RETREAT      = 3
+    SUBSTITUTE   = 4
+    EVOLVE       = 5
+    SURREND      = 6
+    ATTACK       = 7
+    USE_ITEM     = 8
+    USE_SUPPORT  = 9
+
 class Debuffs(Enum):
     POISON = "Poison"
     SLEEP = "Sleep"

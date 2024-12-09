@@ -173,7 +173,7 @@ def start_game():
 
 
 
-            
+
             # define active card
             active_card = player.Terrain[0]
             active_card_rival = opponent.Terrain[0]
@@ -194,6 +194,8 @@ def start_game():
                 if len(valid_moves) > 0:
 
                     move = random.choice(active_card.moves)
+
+
 
                     # apply buffs,debuffs on the move
                     game_logic.flip_coin(move.coinflips)

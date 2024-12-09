@@ -2,6 +2,7 @@ import random
 from .player import *
 from .move import *
 from .pokemon_card import *
+from .enums import *
 
 class GameLogic:
     def __init__(self):
@@ -103,14 +104,7 @@ class GameLogic:
         
         return move_edit
 
-class Actions(Enum):
-    SET_ENERGY   = 0
-    PLACE_ACTIVE = 1
-    PLACE_BENCH  = 2
-    RETREAT      = 3
-    SUBSTITUTE   = 4
-    EVOLVE       = 5
-    SURREND      = 6
+
     
 class Game:
     def __init__(self):
@@ -200,16 +194,51 @@ class Game:
 
     def giveEnergy(self, player_id:int):
         pass
-    
-    
     def getActiveCard(self, player_id:int):
         pass
 
     def getBench(self, player_id:int):
         pass
 
-    def getValidActions(self, player_id:int):
-        pass
+    def getValidActions(self, player:Player):
+        valid_actions = []
+
+        # give energy to the  active card
+        if player.energy > 0:
+            valid_actions.append(Actions.SET_ENERGY)
+        
+        # I don't think it's worth to have both options, as it could be considered as a waste of energy
+        # eg, you just placed a pokemon in your active slot and waste energy to remove it?
+        if player.ActiveCard == None:
+            # check if player has basic pokemons that can be moved from either deck or bench
+            if player.getBasicCardsAvailable() > 0:
+                valid_actions.append(Actions.PLACE_ACTIVE)
+
+        elif player.ActiveCard.energy >= player.ActiveCard.retreatCost:
+            valid_actions.append(Actions.RETREAT)
+        
+        # check if player can place any pokemon in the bench, given there's an active pokemon
+        if player.ActiveCard is not None and len(player.Bench) < 3:
+            # check if player has basic pokemons that can be moved from either deck or bench
+            if player.getBasicCardsAvailable() > 0:
+                valid_actions.append(Actions.PLACE_BENCH)
+        
+        # to be coded:
+        """
+        RETREAT
+        SUBSTITUTE
+        EVOLVE
+        SURREND     <-- hard one to code, force a surrend if ai can't do anything?
+
+        ATTACK
+        USE_ITEM
+        USE_SUPPORT
+        """
+
+        return valid_actions
+
+    
+        
 
     def setInitialPlayer(self):
         if self.rules.force_initial_player:
@@ -297,11 +326,11 @@ class Game:
                 active_card = player.ActiveCard
                 active_card_rival = opponent.ActiveCard
 
-                # give energy to the  active card
-                if player.energy > 0:
-                    active_card.energy += 1
-                    player.energy = 0
                 
+                # Here we collect valid actions into an array, the ai will have to pick one
+                player.valid_actions = self.getValidActions(player)
+
+
                 # check if we have used our free energy
                 # try attacking once card has been placed, given the turn id is greater than 0 (can not attack on the first turn) + can not attack empty slots
                 if self.TotalTurns > 0 and player.Active is not None and opponent.Active is not None:
@@ -311,6 +340,8 @@ class Game:
                     # usually cards have moves, ensure this is true
                     # if false: ignore attacks
                     if len(valid_moves) > 0:
+
+                        # here the ai should pick between a move
                         move = random.choice(active_card.moves)
     
 
