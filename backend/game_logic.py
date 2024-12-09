@@ -206,7 +206,7 @@ class Game:
         # Always available
         valid_actions.append(Actions.END_TURN)
 
-        # give energy to any card
+        # give energy to any card on the board
         if player.energy > 0 and (player.ActiveCard is not None or len(player.Bench) > 0):
             valid_actions.append(Actions.SET_ENERGY)
         

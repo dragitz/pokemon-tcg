@@ -6,33 +6,32 @@ class Actions(Enum):
     PLACE_ACTIVE = 1
     PLACE_BENCH  = 2
     RETREAT      = 3
-    SUBSTITUTE   = 4
-    EVOLVE       = 5
-    SURREND      = 6
-    ATTACK       = 7
-    USE_ITEM     = 8
-    USE_SUPPORT  = 9
-    END_TURN     = 10
+    EVOLVE       = 4
+    SURREND      = 5
+    ATTACK       = 6
+    USE_ITEM     = 7
+    USE_SUPPORT  = 8
+    END_TURN     = 9
 
 class Debuffs(Enum):
-    POISON = "Poison"
-    SLEEP = "Sleep"
-    PARALYSIS = "Paralysis"
-    BURN = "Burn"
-    CONFUSION = "Confusion"
+    POISON    = 0
+    SLEEP     = 1
+    PARALYSIS = 2
+    BURN      = 3
+    CONFUSION = 4
 
 class PokemonType(Enum):
-    GRASS = "Grass"
-    FIRE = "Fire"
-    WATER = "Water"
-    LIGHTNING = "Lightning"
-    PSYCHIC = "Psychic"
-    FIGHTING = "Fighting"
-    DARKNESS = "Darkness"
-    METAL = "Metal"
-    DRAGON = "Dragon"
-    ITEM = "Item"
-    SUPPORTER = "Supporter"
+    GRASS     = 0
+    FIRE      = 1
+    WATER     = 2
+    LIGHTNING = 3
+    PSYCHIC   = 4
+    FIGHTING  = 5
+    DARKNESS  = 6
+    METAL     = 7
+    DRAGON    = 8
+    ITEM      = 9
+    SUPPORTER = 10
 
 class Energy:
     def __init__(self, type:PokemonType, quantity=1):
