@@ -1,27 +1,43 @@
+from enum import Enum
+from .enums import PokemonType
+
+class Stages(Enum):
+    BASIC = "BASIC"
+    STAGE_1 = "STAGE_1"
+    STAGE_2 = "STAGE_2"
+    #STAGE_3 = "STAGE_3"
+    #STAGE_4 = "STAGE_4"
+    
+
 class PokemonCard:
-    def __init__(self, id:int, isEx:bool, stage:int, maxHp:int, moves:dict, energy=0):
+    def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, moves:dict, type:PokemonType, retreat_cost = 1, energy=0):
 
         self.id = id
 
-        self.isEx = isEx
-        self.stage = stage  # [0,1,2,3]
-        
+        # Base data
         self.maxHp = maxHp
         self.hp    = self.maxHp
-        self.health_bar = 100
+        self.health_bar = 100   # placeholder, will be updated upon taking damage
 
-        self.type = ""
-        self.status_effects = []
         self.moves = moves
+
+        self.isEx = isEx
+        self.stage = stage
         
-        self.isBasic = True
+        self.type = type
+        
+        # Buffs/Debuffs
+
+        # Extra info
         self.energy = energy
-        self.weakness = ""
-
-        self.retreatCost = 1
+        self.placed_turn = 0
+        self.retreatCost = retreat_cost
+        
         self.rarity = 0
-
+        
         self.asset = ""
+
+        
     
     def applyDamage(self, amount:int):
         self.hp -= amount

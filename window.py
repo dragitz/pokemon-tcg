@@ -12,7 +12,7 @@ pygame.display.set_caption("Card Game Terrain")
 
 # Colors
 TERRAIN_COLOR_TOP_BOTTOM = (0, 120, 200)  # Darker at the top and bottom
-TERRAIN_COLOR_MIDDLE = (0, 151, 239)     # Lighter at the center
+TERRAIN_COLOR_MIDDLE = (130, 151, 239)     # Lighter at the center
 SLOT_COLOR = (77, 186, 238)              # Slot color
 
 # Gradient generation function
@@ -69,7 +69,7 @@ def main():
     time_elapsed = 0  # Track elapsed time for pulsating animation
 
     # Example image path for card
-    card_image_path = "show.png"  # Your image path from upload
+    card_image_path = "assets/show.png"  # Your image path from upload
 
     while running:
         for event in pygame.event.get():
