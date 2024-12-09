@@ -105,6 +105,10 @@ class GameLogic:
         return move_edit
 
 
+############################################################
+############################################################
+############################################################
+
     
 class Game:
     def __init__(self):
@@ -122,6 +126,7 @@ class Game:
         self.Player2 = None
 
         self.turns = 0
+        self.isPreGame = True
         self.gameFinished = False
 
         self.GAMES = 0
@@ -207,6 +212,8 @@ class Game:
         valid_actions.append(Actions.END_TURN)
 
         # give energy to any card on the board
+        # note: this does not check which type of energy you have vs the pokemon type/move
+        #       in this simulation energies are all neutral (for now)
         if player.energy > 0 and (player.ActiveCard is not None or len(player.Bench) > 0):
             valid_actions.append(Actions.SET_ENERGY)
         
@@ -289,6 +296,8 @@ class Game:
             # Currently the reset function fully resets a deck to zero
             # note: unsure how to change the behavior of this function, will see in the future
             self.softReset()
+            
+            self.GAMES += 1
 
             # Create temp deck
             # This is important until I code an actual deck (it's going to be a pain manually coding every card..)
@@ -299,12 +308,50 @@ class Game:
             self.Player1.deck = self.shuffleDeck(self.Player1.deck)
             self.Player2.deck = self.shuffleDeck(self.Player2.deck)
 
-            # draw cards
+            # draw cards + ensure a basic pokemon is drawn
+            p1_reshuffles = 0
+            valid_cards = []
             self.Player1.drawCard(self.rules.INITIAL_CARDS_DRAWN)
+            valid_cards = self.Player1.getBasicCardsAvailable()
+            while len(valid_cards) == 0:
+                p1_reshuffles += 1
+                
+                # put the cards in the hand back into the deck and shuffle it. then draw 7
+                for card in self.Player1.cards:
+                    self.Player1.deck.append(self.Player1.cards.pop(0))
+                self.Player1.shuffleDeck()
+
+                self.Player1.drawCard(7)
+                valid_cards = self.Player1.getBasicCardsAvailable()
+                if len(valid_cards) > 0:
+                    break
+                
+                
+            p2_reshuffles = 0
+            valid_cards = []
             self.Player2.drawCard(self.rules.INITIAL_CARDS_DRAWN)
+            valid_cards = self.Player2.getBasicCardsAvailable()
+            while len(valid_cards) == 0:
+                p2_reshuffles += 1
+                
+                # put the cards in the hand back into the deck and shuffle it. then draw 7
+                for card in self.Player2.cards:
+                    self.Player2.deck.append(self.Player2.cards.pop(0))
+                self.Player2.shuffleDeck()
+
+                self.Player2.drawCard(7)
+                valid_cards = self.Player2.getBasicCardsAvailable()
+                if len(valid_cards) > 0:
+                    break
+            
+            # extra card to the other player for each reshuffles
+            self.Player1.drawCard(p2_reshuffles)
+            self.Player2.drawCard(p1_reshuffles)
+
 
             # who begins, track it, set to true 
             self.setInitialPlayer()
+
 
             while not self.gameFinished:
                 self.turns += 1

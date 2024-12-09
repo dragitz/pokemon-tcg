@@ -39,6 +39,10 @@ class Player:
         self.deck = deck
     
     def drawCard(self, amount:int):
+
+        if amount <= 0:
+            return
+        
         deck_amount = len(self.deck)
         if deck_amount <= 0:
             print(self.name, "couldn't draw a card (this error can only be triggered if drawing a card was selected as a valid action when it wasn't)")
@@ -59,7 +63,7 @@ class Player:
         for i in range(len(self.Bench)):
             if self.Bench[i].stage == Stages.BASIC:
                 valid.append(self.Bench[i])
-                
+
         return valid
     
     def removeCard(self, id:int):
