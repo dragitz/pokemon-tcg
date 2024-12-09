@@ -178,7 +178,7 @@ class Game:
                 # how many attacks per head are required in order to make an attack
                 # this is just a test for the logic of the parser, i don't think there's such a card with similar conditions
                 REQUIRED_HEADS = random.randint(0, TOTAL_COINFLIPS) if TOTAL_COINFLIPS > 0 else 0
-                move = Move(
+                move = Player.Move(
                     logic=f"""
                     IF HEADS >= {REQUIRED_HEADS} THEN ATTACK*HEADS
                     """,
@@ -204,22 +204,28 @@ class Game:
 
     def getBench(self, player_id:int):
         pass
-
-    def decideAction(self, player):
-        # here we code the ai to choose something
-        # right now it's pure randomness
-        actionId = random.choice(player.valid_actions)
-        
+    
+    def executeAction(self, player:Player, actionId:int):
         # this will kill the infinite loop
         if actionId == Actions.END_TURN:
             player.end_turn = True
         
         game_logic = GameLogic()
 
+        # allow agent to pick a move
         if actionId == Actions.ATTACK:
+            player.ActiveCard.
             
 
-        return actionId
+        
+
+    def decideAction(self, player):
+        # here we code the ai to choose something
+        # right now it's pure randomness
+        actionId = random.choice(player.valid_actions)
+
+        self.executeAction(player, actionId)
+    
     def getValidActions(self, player:Player):
         
         # During the setup phase, first card must be the Active pokemon
