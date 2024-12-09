@@ -1,4 +1,5 @@
-from player_stats import *
+from .player_stats import *
+from .pokemon_card import *
 import random
 
 class Player:
@@ -11,7 +12,7 @@ class Player:
         self.deck = []
         self.dead = []
 
-        self.ActiveCard = None
+        self.ActiveCard = PokemonCard()
         self.Bench = [None, None, None]
 
         self.energy = 0
@@ -27,7 +28,7 @@ class Player:
         index = basic_in_hand.index(item)
         
         card = self.cards.pop(index)
-        self.Terrain[0] = card      # <-- hardcoded slot
+        self.ActiveCard = card      # <-- hardcoded slot
 
         #print("card placed by player id: ",self.id)
     def shuffleDeck(self):

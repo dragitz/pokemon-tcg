@@ -103,6 +103,15 @@ class GameLogic:
         
         return move_edit
 
+class Actions(Enum):
+    SET_ENERGY   = 0
+    PLACE_ACTIVE = 1
+    PLACE_BENCH  = 2
+    RETREAT      = 3
+    SUBSTITUTE   = 4
+    EVOLVE       = 5
+    SURREND      = 6
+    
 class Game:
     def __init__(self):
         self.game_id = 0
@@ -118,6 +127,7 @@ class Game:
         self.Player1 = None
         self.Player2 = None
 
+        self.turns = 0
         self.gameFinished = False
 
         self.GAMES = 0
@@ -138,27 +148,7 @@ class Game:
     def deletePlayers(self):
         self.Player1 = None
         self.Player2 = None
-        
-    # soft reset the game, keep player statistics and current deck (both can be edited)
-    def softReset(self):
-        # reset scores
-        self.Player1.localGameTurnWins = 0
-        self.Player2.localGameTurnWins = 0
-
-        # setup players without resetting their data (stats)
-        self.Player1.cards = []
-        self.Player2.cards = []
-        
-        self.Player1.deck = []
-        self.Player2.deck = []
-
-        self.Player1.ActiveCard = None
-        self.Player1.Bench = [None, None, None]
-        
-        self.Player2.ActiveCard = None
-        self.Player2.Bench = [None, None, None]
-
-
+    
     #####################################################
     def shuffleDeck(self, deck):
         for i in range(len(deck)):
@@ -230,6 +220,30 @@ class Game:
             self.PlayerTurn = value
             self.starting_player = value
     
+    # soft reset the game, keep player statistics and current deck (both can be edited)
+    def softReset(self):
+        # reset scores
+        self.Player1.localGameTurnWins = 0
+        self.Player2.localGameTurnWins = 0
+
+        # setup players without resetting their data (stats)
+        self.Player1.cards = []
+        self.Player2.cards = []
+        
+        self.Player1.deck = []
+        self.Player2.deck = []
+
+        self.Player1.ActiveCard = None
+        self.Player1.Bench = [None, None, None]
+        
+        self.Player2.ActiveCard = None
+        self.Player2.Bench = [None, None, None]
+
+        self.TotalTurns = 0
+        self.gameFinished = False
+
+        self.turns = 0
+
     # The game will be played here
     def playGame(self):
 
@@ -256,7 +270,48 @@ class Game:
             # who begins, track it, set to true 
             self.setInitialPlayer()
 
-        pass
+            while not self.gameFinished:
+                self.turns += 1
+                
+                # set player for current turn
+                if self.PlayerTurn == 1:
+                    player = self.Player2
+                    opponent = self.Player1
+                else:
+                    player = self.Player1
+                    opponent = self.Player2
+                
+                # stats
+                player.stats.total_turns += 1
+
+                # give energy
+                if self.TotalTurns >= 1:
+                    player.energy = 1
+                    player.drawCard(1)
+
+                # check if top card needs to be placed on board slot 0 (main pokemon)
+                if player.ActiveCard == None:
+                    player.placeCard()
+
+                # define active card
+                active_card = player.ActiveCard
+                active_card_rival = opponent.ActiveCard
+
+                # give energy to the  active card
+                if player.energy > 0:
+                    active_card.energy += 1
+                    player.energy = 0
+                
+                # check if we have used our free energy
+                # try attacking once card has been placed, given the turn id is greater than 0 (can not attack on the first turn) + can not attack empty slots
+                if self.TotalTurns > 0 and player.Active is not None and opponent.Active is not None:
+                    
+                    valid_moves = active_card.getValidMoves()
+
+                    # usually cards have moves, ensure this is true
+                    # if false: ignore attacks
+                    if len(valid_moves) > 0:
+                        move = random.choice(active_card.moves)
     
 
 class Rules:

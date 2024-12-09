@@ -133,7 +133,12 @@ def start_game():
             board.Player2.stats.total_games_first += 1
         else:
             board.Player1.stats.total_games_first += 1
-        
+
+
+
+
+
+
         # reset board
         board.TotalTurns = 0
 
@@ -164,6 +169,10 @@ def start_game():
             if player.Terrain[0] == None:
                 # place card logic here
                 player.placeCard()
+            
+
+
+
             
             # define active card
             active_card = player.Terrain[0]
