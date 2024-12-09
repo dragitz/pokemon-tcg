@@ -1,4 +1,5 @@
 import random
+from player import *
 
 class GameLogic:
     def __init__(self):
@@ -99,3 +100,82 @@ class GameLogic:
                             self.retreat(2)
         
         return move_edit
+
+class Game:
+    def __init__(self):
+        self.game_id = 0
+        self.rules = Rules()
+
+        self.PlayerTurn = 0
+        self.TotalTurns = 0
+
+        self.starting_player = 0
+
+        self.Player1 = None
+        self.Player2 = None
+
+        self.gameFinished = False
+    
+    def createGame(self):
+        pass
+    
+    def createPlayers(self, Player1:Player, Player2:Player):
+        self.Player1 = Player1
+        self.Player2 = Player2
+
+    # soft reset the game, keep player statistics and current deck (both can be edited)
+    def resetGame(self):
+        pass
+
+    #####################################################
+    def shuffleDeck(self):
+        pass
+
+    def drawCard(self, amount:int):
+        pass
+    
+    def discardCard(self, player_id:int, slot:int):
+        pass
+    
+    #####################################################
+
+    def giveEnergy(self, player_id:int):
+        pass
+    
+    def getActiveCard(self, player_id:int):
+        pass
+
+    def getBench(self, player_id:int):
+        pass
+
+    def getValidActions(self, player_id:int):
+        pass
+
+    def setInitialPlayer(self, forced_id:int):
+        if not forced_id:
+            self.PlayerTurn = forced_id
+            self.starting_player = forced_id
+        else:
+            self.PlayerTurn = random.randint(0,1)
+            self.starting_player = self.PlayerTurn
+    
+    # The game will be played here
+    def playGame(self):
+        pass
+    
+
+class Rules:
+    def __init__(self):
+        self.disabledSlots = [] #0, 1, 2, 3
+        self.disabledCardIds = []
+        self.disabledCardTypes = []
+        self.disabledCardStats = []
+        self.isDrawingDisabled = False
+        self.isEnergyDisabled = False
+        self.isItemDisabled = False
+        
+        self.maxTurns = 30
+
+        self.DECK_SIZE = 20
+        self.INITIAL_CARDS_GIVEN = 5
+        self.MAX_CARDS_IN_HAND = 10

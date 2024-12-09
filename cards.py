@@ -51,7 +51,6 @@ For the logic:
 import math
 import random
 import time
-from utils import *
 
 MAX_SIMULATED_GAMES = 10000
 
