@@ -205,6 +205,21 @@ class Game:
     def getBench(self, player_id:int):
         pass
 
+    def decideAction(self, player):
+        # here we code the ai to choose something
+        # right now it's pure randomness
+        actionId = random.choice(player.valid_actions)
+        
+        # this will kill the infinite loop
+        if actionId == Actions.END_TURN:
+            player.end_turn = True
+        
+        game_logic = GameLogic()
+
+        if actionId == Actions.ATTACK:
+            
+
+        return actionId
     def getValidActions(self, player:Player):
         
         # During the setup phase, first card must be the Active pokemon

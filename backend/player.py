@@ -24,22 +24,6 @@ class Player:
         self.valid_actions = []
         self.end_turn = False
     
-    def decideAction(self):
-        # here we code the ai to choose something
-        # right now it's pure randomness
-        actionId = random.choice(self.valid_actions)
-        
-        # this will kill the infinite loop
-        if actionId == Actions.END_TURN:
-            self.end_turn = True
-        
-        game_logic = GameLogic()
-
-        if actionId == Actions.ATTACK:
-            
-
-        return actionId
-    
     def placeCard(self):
         
         # Basic logic
