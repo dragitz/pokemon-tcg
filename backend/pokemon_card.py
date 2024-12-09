@@ -8,6 +8,10 @@ class Stages(Enum):
     #STAGE_3 = "STAGE_3"
     #STAGE_4 = "STAGE_4"
     
+class CardType(Enum):
+    MONSTER = 0
+    ITEM    = 1
+    
 
 class PokemonCard:
     def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, moves:dict, type:PokemonType, retreat_cost = 1, energy=0, asset_name = ""):

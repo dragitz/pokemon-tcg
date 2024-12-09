@@ -12,6 +12,7 @@ class Actions(Enum):
     ATTACK       = 7
     USE_ITEM     = 8
     USE_SUPPORT  = 9
+    END_TURN     = 10
 
 class Debuffs(Enum):
     POISON = "Poison"

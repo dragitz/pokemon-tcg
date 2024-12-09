@@ -203,8 +203,11 @@ class Game:
     def getValidActions(self, player:Player):
         valid_actions = []
 
-        # give energy to the  active card
-        if player.energy > 0:
+        # Always available
+        valid_actions.append(Actions.END_TURN)
+
+        # give energy to any card
+        if player.energy > 0 and (player.ActiveCard is not None or len(player.Bench) > 0):
             valid_actions.append(Actions.SET_ENERGY)
         
         # I don't think it's worth to have both options, as it could be considered as a waste of energy
@@ -217,7 +220,7 @@ class Game:
         elif player.ActiveCard.energy >= player.ActiveCard.retreatCost:
             valid_actions.append(Actions.RETREAT)
         
-        # check if player can place any pokemon in the bench, given there's an active pokemon
+        # check if player can place any pokemon in the bench, active pokemon must exist
         if player.ActiveCard is not None and len(player.Bench) < 3:
             # check if player has basic pokemons that can be moved from either deck or bench
             if player.getBasicCardsAvailable() > 0:
@@ -225,14 +228,18 @@ class Game:
         
         # to be coded:
         """
-        RETREAT
-        SUBSTITUTE
+        RETREAT     <-- swap position of your active pokemon with one in the bench
+                    <-- can be done once per turn
+        
         EVOLVE
         SURREND     <-- hard one to code, force a surrend if ai can't do anything?
 
-        ATTACK
-        USE_ITEM
-        USE_SUPPORT
+        ATTACK      <-- attacking will end the turn
+
+        USE_ITEM    <-- use any item as much as you have in your turn
+        USE_SUPPORT <-- use one at most per turn
+        USE_ABILITY <-- some are active, some are passive, it really depends LOL 
+                        (i laugh because I'll have to suffer while coding every ability)
         """
 
         return valid_actions
