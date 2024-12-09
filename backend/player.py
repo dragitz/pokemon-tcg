@@ -1,5 +1,8 @@
 from .player_stats import *
 from .pokemon_card import *
+from .enums import *
+from .game_logic import GameLogic
+
 import random
 
 class Player:
@@ -19,6 +22,23 @@ class Player:
         self.localGameTurnWins = 0
 
         self.valid_actions = []
+        self.end_turn = False
+    
+    def decideAction(self):
+        # here we code the ai to choose something
+        # right now it's pure randomness
+        actionId = random.choice(self.valid_actions)
+        
+        # this will kill the infinite loop
+        if actionId == Actions.END_TURN:
+            self.end_turn = True
+        
+        game_logic = GameLogic()
+
+        if actionId == Actions.ATTACK:
+            
+
+        return actionId
     
     def placeCard(self):
         
@@ -39,7 +59,6 @@ class Player:
         self.deck = deck
     
     def drawCard(self, amount:int):
-
         if amount <= 0:
             return
         

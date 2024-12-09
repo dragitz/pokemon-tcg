@@ -126,7 +126,7 @@ class Game:
         self.Player2 = None
 
         self.turns = 0
-        self.isPreGame = True
+        self.isSetup = True
         self.gameFinished = False
 
         self.GAMES = 0
@@ -206,7 +206,23 @@ class Game:
         pass
 
     def getValidActions(self, player:Player):
+        
+        # During the setup phase, first card must be the Active pokemon
+        if self.isSetup and player.ActiveCard is None:
+            return [Actions.PLACE_ACTIVE, Actions.PLACE_BENCH]
+        
         valid_actions = []
+
+        # During the setup phase, after placing an active pokemon, if any other basic pokemon is available
+        # allow agent to place them on the bench
+        if self.isSetup and player.ActiveCard is not None:
+            valid_actions.append(Actions.END_TURN)
+            if player.getBasicCardsAvailable() > 0 and len(player.Bench) < 3:
+                valid_actions.append(Actions.PLACE_BENCH)
+
+            return valid_actions
+        
+        
 
         # Always available
         valid_actions.append(Actions.END_TURN)
@@ -233,6 +249,14 @@ class Game:
             if player.getBasicCardsAvailable() > 0:
                 valid_actions.append(Actions.PLACE_BENCH)
         
+        # check if active pokemon can attack
+        if player.ActiveCard is not None and not player.ActiveCard.attackDisabled:
+            for move in player.ActiveCard.moves:
+                if player.ActiveCard.energy >= move.energy_cost:
+                    # valid move has been found
+                    valid_actions.append(Actions.ATTACK)
+                    break
+
         # to be coded:
         """
         RETREAT     <-- swap position of your active pokemon with one in the bench
@@ -354,6 +378,8 @@ class Game:
 
 
             while not self.gameFinished:
+                
+                # Current game turns
                 self.turns += 1
                 
                 # set player for current turn
@@ -364,11 +390,14 @@ class Game:
                     player = self.Player1
                     opponent = self.Player2
                 
-                # stats
+                # allow the player to do an action
+                player.end_turn = False
+
+                # increase the total amount of turns a player has played
                 player.stats.total_turns += 1
 
                 # give energy
-                if self.TotalTurns >= 1:
+                if self.TotalTurns >= 1 and not self.isSetup:
                     player.energy = 1
                     player.drawCard(1)
 
@@ -382,8 +411,9 @@ class Game:
 
                 
                 # Here we collect valid actions into an array, the ai will have to pick one
-                player.valid_actions = self.getValidActions(player)
-
+                while not player.end_turn:
+                    player.valid_actions = self.getValidActions(player)
+                    player.decideAction()
 
                 # check if we have used our free energy
                 # try attacking once card has been placed, given the turn id is greater than 0 (can not attack on the first turn) + can not attack empty slots
