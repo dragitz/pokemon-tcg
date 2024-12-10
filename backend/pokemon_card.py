@@ -2,6 +2,7 @@ import random
 from enum import Enum
 from .enums import PokemonType
 
+
 from lupa import LuaRuntime
 
 class Stages(Enum):
@@ -35,34 +36,40 @@ class Move:
         self.before_attack = before_attack
         self.after_attack = after_attack
 
-    def execute_logic_old(self, game_logic):
-        move_data = game_logic.parse_logic(self)
-        return move_data
     
-    def execute_logic(self):
+    def execute_logic(self, player, opponent):
         lua = LuaRuntime()
+
+        if self.before_attack == "": self.before_attack = "function() end"
         lua_script_before_attack = lua.eval(self.before_attack)
+
+        if self.after_attack == "": self.after_attack = "function() end"
         lua_script_after_attack = lua.eval(self.after_attack)
 
-        # Define properties that both script will access
+        # Global properties that lua can access
+        # eg: "lua_globals.damage" in lua will be "damage"
         lua_globals = lua.globals()
         lua_globals.damage = self.damage
-        #lua_globals.coinflips = self.coinflips
-
-        lua_globals.heads = 1
+        
+        lua_globals.heads = 0
         for i in range(self.coinflips):
             if random.randint(0,1) > 0:
                 lua_globals.heads += 1
         
-        # execute both scripts here
-        print(f"heads: {lua_globals.heads}")
-        lua_script_before_attack()
-        #lua_script_after_attack()
+        lua_globals.energy_removed = 0
+        lua_globals.self_heal      = 0
 
-        #lua_script.after_attack()    # debuffs, remove enrgy
+        # execute both scripts here
+        lua_script_before_attack()
+        lua_script_after_attack()    # debuffs, remove enrgy
 
         self._TotalDamage = lua_globals.damage
-        print(f"Attack {self.damage}  -  self._TotalDamage {self._TotalDamage}")
+
+        # simple damage calculation
+        opponent.ActiveCard.hp -= self._TotalDamage
+        opponent.ActiveCard.health_bar = max(opponent.ActiveCard.hp,1) / opponent.ActiveCard.maxHp * 100
+        
+        #print(f"Attack {self.damage}  -  self._TotalDamage {self._TotalDamage}")
 
 class PokemonCard:
     def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, move_1:Move, type:PokemonType, retreat_cost = 1, energy=0, asset_name = ""):

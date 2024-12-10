@@ -65,16 +65,25 @@ class Player:
             if self.cards[i].stage == Stages.BASIC:
                 valid.append(self.cards[i])
         return valid
+    
+    def getBasicCardsInBench(self):
+        valid_basic_bench = []
+        if self.Bench_1 is not None and self.Bench_1.stage == Stages.BASIC:
+            valid_basic_bench.append(self.Bench_1)
+        if self.Bench_1 is not None and self.Bench_2.stage == Stages.BASIC:
+            valid_basic_bench.append(self.Bench_2)
+        if self.Bench_1 is not None and self.Bench_3.stage == Stages.BASIC:
+            valid_basic_bench.append(self.Bench_3)
+        
+        return valid_basic_bench
 
     def getBasicCardsAvailable(self):
         valid = self.getBasicCardsInHand()
-
-        if self.Bench_1 is not None and self.Bench_1.stage == Stages.BASIC:
-            valid.append(self.Bench_1)
-        if self.Bench_1 is not None and self.Bench_2.stage == Stages.BASIC:
-            valid.append(self.Bench_2)
-        if self.Bench_1 is not None and self.Bench_3.stage == Stages.BASIC:
-            valid.append(self.Bench_3)
+        
+        cards = self.getBasicCardsInBench()
+        for card in cards:
+            valid.append(card)
+            
         
         return valid
     

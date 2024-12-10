@@ -117,27 +117,78 @@ class Game:
         pokemon.energy += 1
 
 
-    def getActiveCard(self, player:Player):
+    def placeActiveCard(self, player:Player):
+        # Brain should decide
+        # for now it's random
+
+        # give priority to pokemons in the hand
+        card = None
+        cards = player.getBasicCardsInHand()
+        
+        if len(cards) > 0: 
+            card = random.choice(cards)
+            card_index = cards.index(card)
+            player.ActiveCard = player.cards.pop(card_index)
+            return
+        
+        cards = player.getBasicCardsInBench()
+        if len(cards) > 0:
+            card = random.choice(cards)
+
+            # FUCK
+            if card == player.Bench_1:
+                player.Bench_1 = None
+                player.ActiveCard = card
+                return
+            if card == player.Bench_2:
+                player.Bench_2 = None
+                player.ActiveCard = card
+                return
+            if card == player.Bench_3:
+                player.Bench_3 = None
+                player.ActiveCard = card
+                return
+
+        else:
+            print("placeActiveCard::This should not get hit, wtf?")
+        
+    def placeBenchCard(self):
+        # code this shit
         pass
+
+
+        
+
+
 
     def getBench(self, player:Player):
         pass
     
 
-    def executeAction(self, player:Player, actionId:int):
+    def executeAction(self, player:Player, actionId:int, opponent:Player):
         
         # this will kill the infinite loop
         if actionId == Actions.END_TURN:
             player.end_turn = True
             return    
         
-        print(f"Action: {actionId},   player: {player.name},   player.end_turn: {player.end_turn}")
-        print("")
+        #print(f"Action: {actionId},   player: {player.name},   player.end_turn: {player.end_turn}")
+        #print("")
+
+        if actionId == Actions.PLACE_ACTIVE:
+            self.placeActiveCard()
+            return
 
         # note: must allow agent to pick a move
         if actionId == Actions.ATTACK:
             player.end_turn = True
-            player.ActiveCard.move_1.execute_logic()
+            player.ActiveCard.move_1.execute_logic(player, opponent)
+
+            # check if we killed the opponent's active pokemon
+            if opponent.ActiveCard.hp <= 0:
+                player.localGameTurnWins += 1
+                opponent.ActiveCard = None
+                print(f"Player: {player.name} has killed a pokemon!   Total wins: {player.localGameTurnWins}")
             return
         
         if actionId == Actions.SET_ENERGY:
@@ -152,13 +203,13 @@ class Game:
 
         
 
-    def decideAction(self, player):
+    def decideAction(self, player, opponent):
         # here we code the ai to choose something
         # right now it's pure randomness
         actionId = random.choice(player.valid_actions)        
-        self.executeAction(player, actionId)
+        self.executeAction(player, actionId, opponent)
     
-    def getValidActions(self, player:Player):
+    def getValidActions(self, player:Player, opponent:Player):
         free_bench_slots = 3
         if player.Bench_1 is not None: free_bench_slots -= 1
         if player.Bench_2 is not None: free_bench_slots -= 1
@@ -203,6 +254,10 @@ class Game:
                     # ggs
                     return []
             else:
+                
+                # try to ensure at least one pokemon is in the bench
+                if free_bench_slots == 3 and len(player.getBasicCardsInHand()) > 0:
+                    return [Actions.PLACE_BENCH]
 
                 if player.ActiveCard.energy >= player.ActiveCard.retreatCost and free_bench_slots < 3:
                     valid_actions.append(Actions.RETREAT)
@@ -221,16 +276,8 @@ class Game:
                         valid_actions.append(Actions.SET_ENERGY)
                         
                 
-                # check if active pokemon can attack ( this won't work )
-                if player.ActiveCard is not None and not player.ActiveCard.attackDisabled and 1 == 2:
-                    for move in player.ActiveCard.moves:
-                        if player.ActiveCard.energy >= move.energy_cost:
-                            # valid move has been found
-                            valid_actions.append(Actions.ATTACK)
-                            break
-                
                 # check if active pokemon can attack (test method)
-                if player.ActiveCard is not None and not player.ActiveCard.attackDisabled:
+                if player.ActiveCard is not None and not player.ActiveCard.attackDisabled and opponent.ActiveCard is not None:
                     if player.ActiveCard.energy >= player.ActiveCard.move_1.energy_cost:
                         # valid move has been found
                         valid_actions.append(Actions.ATTACK)
@@ -318,8 +365,6 @@ class Game:
             p1_reshuffles = 0
             valid_cards = []
             self.Player1.drawCard(self.rules.INITIAL_CARDS_DRAWN)
-            print(len(self.Player1.cards))
-
             valid_cards = self.Player1.getBasicCardsAvailable()
             
             while len(valid_cards) == 0:
@@ -361,7 +406,7 @@ class Game:
             # who begins, track it, set to true 
             self.setInitialPlayer()
 
-            print(self.GAMES)
+            print(f"self.GAMES: {self.GAMES}")
             while not self.gameFinished:
                 
                 # Current game turns
@@ -378,6 +423,13 @@ class Game:
                     player = self.Player1
                     opponent = self.Player2
                 
+                # force end game
+                if self.turns >= self.rules.maxTurns:
+                    self.gameFinished = True
+                    player.stats.losses += 1
+                    opponent.stats.losses += 1
+                    break
+                
                 # allow the player to do an action
                 player.end_turn = False
 
@@ -388,6 +440,7 @@ class Game:
                 if self.turns >= 1 and not self.isSetup:
                     player.energy = 1
                     player.drawCard(1)
+                    #print(f"{self.turns}")
 
                 # check if top card needs to be placed on board slot 0 (main pokemon)
                 if player.ActiveCard == None:
@@ -400,8 +453,8 @@ class Game:
                 
                 # Here we collect valid actions into an array, the ai will have to pick one
                 while not player.end_turn:
-                    player.valid_actions = self.getValidActions(player)
-                    print(f"setup: {self.isSetup}   player.end_turn {player.end_turn}    turn: {self.turns}")
+                    player.valid_actions = self.getValidActions(player, opponent)
+                    #print(f"setup: {self.isSetup}   player.end_turn {player.end_turn}    turn: {self.turns}")
 
                     if len(player.valid_actions) < 1:
                         self.gameFinished = True
@@ -410,9 +463,11 @@ class Game:
                         player.stats.knockout_without_backup += 1
 
                         opponent.stats.wins += 1
+                        print(f"shitty loss {self.GAMES}")
                         break
 
-                    self.decideAction(player)
+                    self.decideAction(player, opponent)
+                    print(player.valid_actions)
                     player.valid_actions = []
 
                 # Change turn
