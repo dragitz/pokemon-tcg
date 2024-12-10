@@ -72,7 +72,7 @@ class Move:
         #print(f"Attack {self.damage}  -  self._TotalDamage {self._TotalDamage}")
 
 class PokemonCard:
-    def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, move_1:Move, type:PokemonType, retreat_cost = 1, energy=0, asset_name = ""):
+    def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, move_1:Move, type:PokemonType, retreat_cost = 2, energy=0, asset_name = ""):
 
         self.id = id
 

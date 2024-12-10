@@ -31,7 +31,7 @@ class Game:
         self.gameFinished = False
 
         self.GAMES = 0
-        self.MAX_SIMULATED_GAMES = 1000
+        self.MAX_SIMULATED_GAMES = 10
     
     def createPlayers(self, Player1, Player2):
         if Player1 == None:
@@ -107,9 +107,8 @@ class Game:
     def giveEnergy(self, player:Player):
         pokemons = [player.ActiveCard]
         
-        if player.Bench_1 is not None: pokemons.append(player.Bench_1)
-        if player.Bench_2 is not None: pokemons.append(player.Bench_2)
-        if player.Bench_3 is not None: pokemons.append(player.Bench_3)
+        for card in player.Bench:
+            pokemons.append(card)
         
         # use brain functions to decide which pokemon should get energy
         # for now it's random
@@ -134,28 +133,24 @@ class Game:
         cards = player.getBasicCardsInBench()
         if len(cards) > 0:
             card = random.choice(cards)
+            card_index = cards.index(card)
+            player.ActiveCard = player.Bench.pop(card_index)
+            return
 
-            # FUCK
-            if card == player.Bench_1:
-                player.Bench_1 = None
-                player.ActiveCard = card
-                return
-            if card == player.Bench_2:
-                player.Bench_2 = None
-                player.ActiveCard = card
-                return
-            if card == player.Bench_3:
-                player.Bench_3 = None
-                player.ActiveCard = card
-                return
-
-        else:
-            print("placeActiveCard::This should not get hit, wtf?")
+        print("placeActiveCard::This should not get hit, wtf?")
+        return
         
-    def placeBenchCard(self):
-        # code this shit
-        pass
-
+    def placeHandCardOnBench(self, player:Player):
+        card = None
+        cards = player.getBasicCardsInHand()
+        if len(cards) > 0:
+            card = random.choice(cards)
+            card_index = cards.index(card)
+            player.Bench.append(player.cards.pop(card_index))
+            return
+        
+        print("placeHandCardOnBench::This should not get hit, wtf?")
+        return
 
         
 
@@ -173,12 +168,17 @@ class Game:
             return    
         
         #print(f"Action: {actionId},   player: {player.name},   player.end_turn: {player.end_turn}")
+        print(f"{player.name},   Action: {actionId}")
         #print("")
 
         if actionId == Actions.PLACE_ACTIVE:
-            self.placeActiveCard()
+            self.placeActiveCard(player)
             return
 
+        if actionId == Actions.PLACE_BENCH:
+            self.placeHandCardOnBench(player)
+            return
+        
         # note: must allow agent to pick a move
         if actionId == Actions.ATTACK:
             player.end_turn = True
@@ -210,95 +210,77 @@ class Game:
         self.executeAction(player, actionId, opponent)
     
     def getValidActions(self, player:Player, opponent:Player):
-        free_bench_slots = 3
-        if player.Bench_1 is not None: free_bench_slots -= 1
-        if player.Bench_2 is not None: free_bench_slots -= 1
-        if player.Bench_3 is not None: free_bench_slots -= 1
+        free_bench_slots = 3 - len(player.Bench)
 
         valid_actions = []
-
         
+        # In any given situation, placing an active pokemon should be the top priority
+        if player.ActiveCard is None:
+            if len(player.getBasicCardsAvailable()) > 0:
+                return [Actions.PLACE_ACTIVE]
+            else:
+                return []  # end game
         
         if self.isSetup:
-            
-            # During the setup phase, first card must be the Active pokemon
-            # we already ensured player receives a playable pokemon at the start of the game (initial draw phase)
-            if player.ActiveCard is None:
-                return [Actions.PLACE_ACTIVE]
-            
-            # During the setup phase, after placing an active pokemon, if any other basic pokemon is available
-            # allow agent to place them on the bench
-            if player.ActiveCard is not None:
-                valid_actions.append(Actions.END_TURN)
-                if len(player.getBasicCardsAvailable()) > 0 and free_bench_slots < 3:
-                    valid_actions.append(Actions.PLACE_BENCH)
 
-                return valid_actions
-        
+            # During the setup, try to place at least 2 pokemons on the bench
+            # else, end turn
+            if len(player.getBasicCardsAvailable()) > 0 and free_bench_slots < 2:
+                return [Actions.PLACE_BENCH]
+            else:
+                return [Actions.END_TURN]
         else:
         
 
             # Always available
-            #valid_actions.append(Actions.END_TURN)
 
-            # I don't think it's worth to have both options, as it could be considered as a waste of energy
-            # eg, you just placed a pokemon in your active slot and waste energy to remove it?
+            # try to ensure at least one pokemon is in the bench
+            if free_bench_slots == 3 and len(player.getBasicCardsInHand()) > 0:
+                return [Actions.PLACE_BENCH]
+            
+            valid_actions.append(Actions.END_TURN)
 
-            # Always ensure active card is present
-            if player.ActiveCard == None:
+            # Swap active pokemon with one in the bench
+            if player.ActiveCard.energy >= player.ActiveCard.retreatCost and free_bench_slots > 0:
+                valid_actions.append(Actions.RETREAT)
+            
+            # check if player can place any pokemon in the bench
+            if free_bench_slots > 0:
                 # check if player has basic pokemons that can be moved from either deck or bench
-                if player.getBasicCardsAvailable() > 0:
-                    valid_actions.append(Actions.PLACE_ACTIVE)
-                else:
-                    # knockout without backup
-                    # ggs
-                    return []
-            else:
-                
-                # try to ensure at least one pokemon is in the bench
-                if free_bench_slots == 3 and len(player.getBasicCardsInHand()) > 0:
-                    return [Actions.PLACE_BENCH]
+                if len(player.getBasicCardsAvailable()) > 0:
+                    valid_actions.append(Actions.PLACE_BENCH)
 
-                if player.ActiveCard.energy >= player.ActiveCard.retreatCost and free_bench_slots < 3:
-                    valid_actions.append(Actions.RETREAT)
-                
-                # check if player can place any pokemon in the bench, active pokemon must exist
-                if player.ActiveCard is not None and free_bench_slots < 3:
-                    # check if player has basic pokemons that can be moved from either deck or bench
-                    if player.getBasicCardsAvailable() > 0:
-                        valid_actions.append(Actions.PLACE_BENCH)
+            # give energy to any card on the board
+            # note: this does not check which type of energy you have vs the pokemon type/move
+            #       in this simulation energies are all neutral (for now)
+            # note: still checking for the active card, even though at this point the player should have one (because of the above checks)
+            if player.energy > 0 and (player.ActiveCard is not None or free_bench_slots > 0):
+                    valid_actions.append(Actions.SET_ENERGY)
+                    
+            
+            # check if active pokemon can attack (test method)
+            if player.ActiveCard is not None and not player.ActiveCard.attackDisabled and opponent.ActiveCard is not None:
+                if player.ActiveCard.energy >= player.ActiveCard.move_1.energy_cost:
+                    # valid move has been found
+                    valid_actions.append(Actions.ATTACK)
 
-                # give energy to any card on the board
-                # note: this does not check which type of energy you have vs the pokemon type/move
-                #       in this simulation energies are all neutral (for now)
-                # note: still checking for the active card, even though at this point the player should have one (because of the above checks)
-                if player.energy > 0 and (player.ActiveCard is not None or free_bench_slots > 0):
-                        valid_actions.append(Actions.SET_ENERGY)
-                        
-                
-                # check if active pokemon can attack (test method)
-                if player.ActiveCard is not None and not player.ActiveCard.attackDisabled and opponent.ActiveCard is not None:
-                    if player.ActiveCard.energy >= player.ActiveCard.move_1.energy_cost:
-                        # valid move has been found
-                        valid_actions.append(Actions.ATTACK)
+            # to be coded:
+            """
+            RETREAT     <-- swap position of your active pokemon with one in the bench
+                        <-- can be done once per turn
+            
+            EVOLVE
+            SURREND     <-- hard one to code, force a surrend if ai can't do anything?
 
-                # to be coded:
-                """
-                RETREAT     <-- swap position of your active pokemon with one in the bench
-                            <-- can be done once per turn
-                
-                EVOLVE
-                SURREND     <-- hard one to code, force a surrend if ai can't do anything?
+            ATTACK      <-- attacking will end the turn
 
-                ATTACK      <-- attacking will end the turn
+            USE_ITEM    <-- use any item as much as you have in your turn
+            USE_SUPPORT <-- use one at most per turn
+            USE_ABILITY <-- some are active, some are passive, it really depends LOL 
+                            (i laugh because I'll have to suffer while coding every ability)
+            """
 
-                USE_ITEM    <-- use any item as much as you have in your turn
-                USE_SUPPORT <-- use one at most per turn
-                USE_ABILITY <-- some are active, some are passive, it really depends LOL 
-                                (i laugh because I'll have to suffer while coding every ability)
-                """
-
-            return valid_actions
+        return valid_actions
 
     
         
@@ -327,14 +309,8 @@ class Game:
 
         self.Player1.ActiveCard = None
         self.Player2.ActiveCard = None
-
-        self.Player1.Bench_1 = None
-        self.Player1.Bench_2 = None
-        self.Player1.Bench_3 = None
-
-        self.Player2.Bench_1 = None
-        self.Player2.Bench_2 = None
-        self.Player2.Bench_3 = None
+        self.Player1.Bench = []
+        self.Player2.Bench = []
 
         self.gameFinished = False
 
@@ -443,8 +419,8 @@ class Game:
                     #print(f"{self.turns}")
 
                 # check if top card needs to be placed on board slot 0 (main pokemon)
-                if player.ActiveCard == None:
-                    player.placeCard()
+                #if player.ActiveCard == None:
+                    #player.placeCard()
 
                 # define active card
                 active_card = player.ActiveCard
@@ -454,6 +430,7 @@ class Game:
                 # Here we collect valid actions into an array, the ai will have to pick one
                 while not player.end_turn:
                     player.valid_actions = self.getValidActions(player, opponent)
+                    #print(player.valid_actions)
                     #print(f"setup: {self.isSetup}   player.end_turn {player.end_turn}    turn: {self.turns}")
 
                     if len(player.valid_actions) < 1:
@@ -463,11 +440,10 @@ class Game:
                         player.stats.knockout_without_backup += 1
 
                         opponent.stats.wins += 1
-                        print(f"shitty loss {self.GAMES}")
+                        print(f"shitty loss {self.GAMES} by {player.name}")
                         break
 
                     self.decideAction(player, opponent)
-                    print(player.valid_actions)
                     player.valid_actions = []
 
                 # Change turn

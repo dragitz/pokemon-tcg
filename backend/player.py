@@ -11,14 +11,13 @@ class Player:
         self.stats = stats
         
         self.cards = []
+        self.graveyard = []
         self.deck = []
-        self.dead = []
+        self.deck_original = []
+        
 
         self.ActiveCard = None
-
-        self.Bench_1 = None
-        self.Bench_2 = None
-        self.Bench_3 = None
+        self.Bench = []
 
         self.energy = 0
         self.localGameTurnWins = 0
@@ -68,12 +67,10 @@ class Player:
     
     def getBasicCardsInBench(self):
         valid_basic_bench = []
-        if self.Bench_1 is not None and self.Bench_1.stage == Stages.BASIC:
-            valid_basic_bench.append(self.Bench_1)
-        if self.Bench_1 is not None and self.Bench_2.stage == Stages.BASIC:
-            valid_basic_bench.append(self.Bench_2)
-        if self.Bench_1 is not None and self.Bench_3.stage == Stages.BASIC:
-            valid_basic_bench.append(self.Bench_3)
+
+        for card in self.Bench:
+            if card.stage == Stages.BASIC:
+                valid_basic_bench.append(card)
         
         return valid_basic_bench
 
