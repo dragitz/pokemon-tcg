@@ -1,5 +1,5 @@
 import random
-from .player import *
+from .player import Player, Move
 from .move import *
 from .pokemon_card import *
 from .enums import *
@@ -134,7 +134,7 @@ class Game:
         self.GAMES = 0
         self.MAX_SIMULATED_GAMES = 1000
     
-    def createPlayers(self, Player1:Player, Player2:Player):
+    def createPlayers(self, Player1, Player2):
         if Player1 == None:
             print("Player1 is None")
             return
@@ -180,7 +180,7 @@ class Game:
                 # how many attacks per head are required in order to make an attack
                 # this is just a test for the logic of the parser, i don't think there's such a card with similar conditions
                 REQUIRED_HEADS = random.randint(0, TOTAL_COINFLIPS) if TOTAL_COINFLIPS > 0 else 0
-                move = Player.Move(
+                move = Move(
                     logic=f"""
                     IF HEADS >= {REQUIRED_HEADS} THEN ATTACK*HEADS
                     """,
@@ -191,7 +191,38 @@ class Game:
                     coinflips=TOTAL_COINFLIPS,
                 )
                 moves = [move]
-                card = PokemonCard(q,False,0,random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]),moves)
+                #card = PokemonCard(q,False,0,random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]),moves)
+                card = PokemonCard(q, False, Stages.BASIC, 100, move, PokemonType.GRASS)
+                
+                fakeDeck.append(card)
+
+        return fakeDeck
+        
+    def createFakeDeck2(self):
+        fakeDeck = []
+        DECK_SIZE = self.rules.DECK_SIZE
+        for q in range(0,DECK_SIZE):
+                
+                # How many coinfilps the move does
+                TOTAL_COINFLIPS = random.randint(0,3) 
+                move_1 = Move(
+                    logic=f"""
+                    function before_attack()
+                        local heads = flip(1)
+                        if heads == 1 then
+                            damage = damage + 10
+                        end
+                    end
+                    
+                    """,
+                    move_type="Attack", # note: currently unused
+                    energy_cost=random.randint(0,4),
+                    damage=100,
+
+                    coinflips=TOTAL_COINFLIPS,
+                )
+                #card = PokemonCard(q,False,0,random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]),move_1)
+                card = PokemonCard(q, False, Stages.BASIC, 100, move_1, PokemonType.GRASS)
                 
                 fakeDeck.append(card)
 
@@ -207,16 +238,19 @@ class Game:
     def getBench(self, player_id:int):
         pass
     
-    def executeAction(self, player:Player, actionId:int):
+    def executeAction(self, player, actionId:int):
         # this will kill the infinite loop
         if actionId == Actions.END_TURN:
             player.end_turn = True
+            
+            if self.isSetup and self.TotalTurns > 1:
+                self.isSetup = False
         
         game_logic = GameLogic()
 
         # allow agent to pick a move
         if actionId == Actions.ATTACK:
-            player.ActiveCard.
+            player.ActiveCard.move_1.execute_logic(game_logic)
             
 
         
@@ -228,7 +262,7 @@ class Game:
 
         self.executeAction(player, actionId)
     
-    def getValidActions(self, player:Player):
+    def getValidActions(self, player):
         
         # During the setup phase, first card must be the Active pokemon
         if self.isSetup and player.ActiveCard is None:
@@ -250,12 +284,7 @@ class Game:
         # Always available
         valid_actions.append(Actions.END_TURN)
 
-        # give energy to any card on the board
-        # note: this does not check which type of energy you have vs the pokemon type/move
-        #       in this simulation energies are all neutral (for now)
-        if player.energy > 0 and (player.ActiveCard is not None or len(player.Bench) > 0):
-            valid_actions.append(Actions.SET_ENERGY)
-        
+
         # I don't think it's worth to have both options, as it could be considered as a waste of energy
         # eg, you just placed a pokemon in your active slot and waste energy to remove it?
         if player.ActiveCard == None:
@@ -271,7 +300,17 @@ class Game:
             # check if player has basic pokemons that can be moved from either deck or bench
             if player.getBasicCardsAvailable() > 0:
                 valid_actions.append(Actions.PLACE_BENCH)
-        
+
+        # give energy to any card on the board
+        # note: this does not check which type of energy you have vs the pokemon type/move
+        #       in this simulation energies are all neutral (for now)
+        if player.energy > 0 and player.ActiveCard is not None and (
+            player.Bench_1 is not None or 
+            player.Bench_2 is not None or 
+            player.Bench_3 is not None
+            ):
+            valid_actions.append(Actions.SET_ENERGY)
+                
         # check if active pokemon can attack
         if player.ActiveCard is not None and not player.ActiveCard.attackDisabled:
             for move in player.ActiveCard.moves:
@@ -348,8 +387,8 @@ class Game:
 
             # Create temp deck
             # This is important until I code an actual deck (it's going to be a pain manually coding every card..)
-            self.Player1.deck = self.createFakeDeck()
-            self.Player2.deck = self.createFakeDeck()
+            self.Player1.deck = self.createFakeDeck2()
+            self.Player2.deck = self.createFakeDeck2()
 
             # shuffle player's decks
             self.Player1.deck = self.shuffleDeck(self.Player1.deck)
@@ -436,7 +475,7 @@ class Game:
                 # Here we collect valid actions into an array, the ai will have to pick one
                 while not player.end_turn:
                     player.valid_actions = self.getValidActions(player)
-                    player.decideAction()
+                    self.decideAction(player)
 
                 # check if we have used our free energy
                 # try attacking once card has been placed, given the turn id is greater than 0 (can not attack on the first turn) + can not attack empty slots

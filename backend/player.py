@@ -1,7 +1,6 @@
 from .player_stats import *
 from .pokemon_card import *
 from .enums import *
-from .game_logic import GameLogic
 
 import random
 
@@ -15,8 +14,11 @@ class Player:
         self.deck = []
         self.dead = []
 
-        self.ActiveCard = PokemonCard()
-        self.Bench = [None, None, None]
+        self.ActiveCard = None
+
+        self.Bench_1 = None
+        self.Bench_2 = None
+        self.Bench_3 = None
 
         self.energy = 0
         self.localGameTurnWins = 0
