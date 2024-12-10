@@ -284,6 +284,10 @@ class Game:
         # Always available
         valid_actions.append(Actions.END_TURN)
 
+        free_bench_slots = 3
+        if player.Bench_1 is not None: free_bench_slots -= 1
+        if player.Bench_2 is not None: free_bench_slots -= 1
+        if player.Bench_3 is not None: free_bench_slots -= 1
 
         # I don't think it's worth to have both options, as it could be considered as a waste of energy
         # eg, you just placed a pokemon in your active slot and waste energy to remove it?
@@ -296,7 +300,7 @@ class Game:
             valid_actions.append(Actions.RETREAT)
         
         # check if player can place any pokemon in the bench, active pokemon must exist
-        if player.ActiveCard is not None and len(player.Bench) < 3:
+        if player.ActiveCard is not None and free_bench_slots < 3:
             # check if player has basic pokemons that can be moved from either deck or bench
             if player.getBasicCardsAvailable() > 0:
                 valid_actions.append(Actions.PLACE_BENCH)
@@ -304,12 +308,9 @@ class Game:
         # give energy to any card on the board
         # note: this does not check which type of energy you have vs the pokemon type/move
         #       in this simulation energies are all neutral (for now)
-        if player.energy > 0 and player.ActiveCard is not None and (
-            player.Bench_1 is not None or 
-            player.Bench_2 is not None or 
-            player.Bench_3 is not None
-            ):
-            valid_actions.append(Actions.SET_ENERGY)
+        # note: still checking for the active card, even though at this point the player should have one (because of the above checks)
+        if player.energy > 0 and (player.ActiveCard is not None or free_bench_slots > 0):
+                valid_actions.append(Actions.SET_ENERGY)
                 
         # check if active pokemon can attack
         if player.ActiveCard is not None and not player.ActiveCard.attackDisabled:
@@ -363,10 +364,15 @@ class Game:
         self.Player2.deck = []
 
         self.Player1.ActiveCard = None
-        self.Player1.Bench = [None, None, None]
-        
         self.Player2.ActiveCard = None
-        self.Player2.Bench = [None, None, None]
+
+        self.Player1.Bench_1 = None
+        self.Player1.Bench_2 = None
+        self.Player1.Bench_3 = None
+
+        self.Player2.Bench_1 = None
+        self.Player2.Bench_2 = None
+        self.Player2.Bench_3 = None
 
         self.TotalTurns = 0
         self.gameFinished = False
@@ -398,7 +404,10 @@ class Game:
             p1_reshuffles = 0
             valid_cards = []
             self.Player1.drawCard(self.rules.INITIAL_CARDS_DRAWN)
+            print(len(self.Player1.cards))
+
             valid_cards = self.Player1.getBasicCardsAvailable()
+            print(len(valid_cards))
             while len(valid_cards) == 0:
                 p1_reshuffles += 1
                 

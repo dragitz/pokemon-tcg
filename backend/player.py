@@ -64,11 +64,14 @@ class Player:
         for i in range(len(self.cards)):
             if self.cards[i].stage == Stages.BASIC:
                 valid.append(self.cards[i])
-        
-        for i in range(len(self.Bench)):
-            if self.Bench[i].stage == Stages.BASIC:
-                valid.append(self.Bench[i])
 
+        if self.Bench_1 is not None and self.Bench_1.stage == Stages.BASIC:
+            valid.append(self.Bench_1)
+        if self.Bench_1 is not None and self.Bench_2.stage == Stages.BASIC:
+            valid.append(self.Bench_2)
+        if self.Bench_1 is not None and self.Bench_3.stage == Stages.BASIC:
+            valid.append(self.Bench_3)
+        
         return valid
     
     def removeCard(self, id:int):
