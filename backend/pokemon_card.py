@@ -76,7 +76,7 @@ class Move:
         #print(f"Attack {self.damage}  -  self._TotalDamage {self._TotalDamage}")
 
 class PokemonCard:
-    def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, move_1:Move, type:PokemonType, retreat_cost = 2, energy=0, asset_name = ""):
+    def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, move_1:Move, type:PokemonType, retreat_cost = 2, asset_name = ""):
 
         self.id = id
 
@@ -101,7 +101,7 @@ class PokemonCard:
         # Buffs/Debuffs
 
         # Dynamic data
-        self.energy = energy
+        self.energy = 0
         self.placed_turn = 0
         self.retreatCost = retreat_cost
         self.attackDisabled = False

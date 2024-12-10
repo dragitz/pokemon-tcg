@@ -32,6 +32,8 @@ class Game:
 
         self.GAMES = 0
         self.MAX_SIMULATED_GAMES = 10
+
+        self.debugEvents = False
     
     def createPlayers(self, Player1, Player2):
         if Player1 == None:
@@ -81,14 +83,14 @@ class Game:
                     before_attack=f"""
                     function()
                         
-                        damage = 30 * heads
+                        damage = damage + 30 * heads
                         
                     end
                     """,
                     after_attack="",
                     move_type="Attack", # note: currently unused
-                    energy_cost=random.randint(1,4),
-                    damage=0,
+                    energy_cost=1,
+                    damage=50,
 
                     coinflips=TOTAL_COINFLIPS,
                 )
@@ -169,8 +171,9 @@ class Game:
             return    
         
         #print(f"Action: {actionId},   player: {player.name},   player.end_turn: {player.end_turn}")
-        print(f"{player.name},   Action: {actionId}")
-        #print("")
+        if self.debugEvents:
+            print(f"{player.name},   Action: {actionId}            turn: {self.turns}")
+        
 
         if actionId == Actions.PLACE_ACTIVE:
             self.placeActiveCard(player)
@@ -189,12 +192,13 @@ class Game:
             if opponent.ActiveCard.hp <= 0:
                 player.localGameTurnWins += 1
                 opponent.ActiveCard = None
-                print(f"Player: {player.name} has killed a pokemon!   Total wins: {player.localGameTurnWins}")
+                if self.debugEvents:
+                    print(f"Player: {player.name} has killed a pokemon!   Total wins: {player.localGameTurnWins}")
             return
         
         if actionId == Actions.SET_ENERGY:
             self.giveEnergy(player)
-            player.energy -= 1
+            player.energy = 0
             return
 
 
@@ -233,12 +237,21 @@ class Game:
         else:
         
 
-            # Always available
+            
 
             # try to ensure at least one pokemon is in the bench
             if free_bench_slots == 3 and len(player.getBasicCardsInHand()) > 0:
                 return [Actions.PLACE_BENCH]
-            
+
+            # give energy to any card on the board
+            # note: this does not check which type of energy you have vs the pokemon type/move
+            #       in this simulation energies are all neutral (for now)
+            # note: still checking for the active card, even though at this point the player should have one (because of the above checks)
+            if player.energy > 0 and (player.ActiveCard is not None or free_bench_slots > 0):
+                    valid_actions.append(Actions.SET_ENERGY)
+                    return [Actions.SET_ENERGY]
+
+            # Always available
             valid_actions.append(Actions.END_TURN)
 
             # Swap active pokemon with one in the bench
@@ -251,31 +264,29 @@ class Game:
                 if len(player.getBasicCardsAvailable()) > 0:
                     valid_actions.append(Actions.PLACE_BENCH)
 
-            # give energy to any card on the board
-            # note: this does not check which type of energy you have vs the pokemon type/move
-            #       in this simulation energies are all neutral (for now)
-            # note: still checking for the active card, even though at this point the player should have one (because of the above checks)
-            if player.energy > 0 and (player.ActiveCard is not None or free_bench_slots > 0):
-                    valid_actions.append(Actions.SET_ENERGY)
+
                     
             
             # check if active pokemon can attack (test method)
-            if player.ActiveCard is not None and not player.ActiveCard.attackDisabled and opponent.ActiveCard is not None:
+            if not player.ActiveCard.attackDisabled and opponent.ActiveCard is not None:
                 if player.ActiveCard.energy >= player.ActiveCard.move_1.energy_cost:
                     # valid move has been found
                     valid_actions.append(Actions.ATTACK)
+                    
 
             # to be coded:
             """
             RETREAT     <-- swap position of your active pokemon with one in the bench
                         <-- can be done once per turn
             
-            EVOLVE
+            EVOLVE      <-- cannot evolve a basic pokemon on the same turn it was placed
+                        <-- has an impact on hp? kinda ? dunno
+                        <-- keeps the energies
             SURREND     <-- hard one to code, force a surrend if ai can't do anything?
 
             ATTACK      <-- attacking will end the turn
 
-            USE_ITEM    <-- use any item as much as you have in your turn
+            USE_ITEM    <-- use any item as much as you have in your turn (usable from turn 3)
             USE_SUPPORT <-- use one at most per turn
             USE_ABILITY <-- some are active, some are passive, it really depends LOL 
                             (i laugh because I'll have to suffer while coding every ability)
@@ -301,6 +312,13 @@ class Game:
         self.Player1.localGameTurnWins = 0
         self.Player2.localGameTurnWins = 0
 
+        #
+        self.Player1.energy = 0
+        self.Player2.energy = 0
+
+        self.Player1.end_turn = False
+        self.Player2.end_turn = False
+
         # setup players without resetting their data (stats)
         self.Player1.cards = []
         self.Player2.cards = []
@@ -314,7 +332,7 @@ class Game:
         self.Player2.Bench = []
 
         self.gameFinished = False
-
+        self.isSetup = True
         self.turns = 0
 
     # The game will be played here
@@ -382,14 +400,14 @@ class Game:
 
             # who begins, track it, set to true 
             self.setInitialPlayer()
-
-            print(f"self.GAMES: {self.GAMES}")
+            if self.debugEvents:
+                print(f"self.GAMES: {self.GAMES}")
             while not self.gameFinished:
                 
                 # Current game turns
                 self.turns += 1
                 
-                if self.isSetup and self.turns > 2:
+                if self.isSetup and self.turns == 3:
                     self.isSetup = False
                 
                 # set player for current turn
@@ -401,7 +419,7 @@ class Game:
                     opponent = self.Player2
                 
                 # force end game
-                if self.turns >= self.rules.maxTurns:
+                if self.turns > self.rules.maxTurns:
                     self.gameFinished = True
                     player.stats.losses += 1
                     opponent.stats.losses += 1
@@ -413,10 +431,11 @@ class Game:
                 # increase the total amount of turns a player has played
                 player.stats.total_turns += 1
 
-                # give energy
-                if self.turns >= 1 and not self.isSetup:
-                    player.energy = 1
+                if self.turns >= 3:
                     player.drawCard(1)
+                if self.turns >= 4:
+                    player.energy = 1
+                    
                     #print(f"{self.turns}")
 
 
@@ -438,7 +457,8 @@ class Game:
                         player.stats.knockout_without_backup += 1
 
                         opponent.stats.wins += 1
-                        print(f"shitty loss {self.GAMES} by {player.name}")
+                        if self.debugEvents:
+                            print(f"shitty loss {self.GAMES} by {player.name}")
                         break
 
                     self.decideAction(player, opponent)
@@ -449,7 +469,8 @@ class Game:
 
                         player.stats.wins += 1
                         opponent.stats.losses += 1
-                        print("")
+                        if self.debugEvents:
+                            print("")
                         break
 
                     player.valid_actions = []
