@@ -4,6 +4,8 @@ from .move import *
 from .pokemon_card import *
 from .enums import *
 
+import lupa
+
 class GameLogic:
     def __init__(self):
         self.variables = {"HEADS": 0}  # Store computed values like HEADS here
