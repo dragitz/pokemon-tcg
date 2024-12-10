@@ -68,6 +68,10 @@ class Move:
         # simple damage calculation
         opponent.ActiveCard.hp -= self._TotalDamage
         opponent.ActiveCard.health_bar = max(opponent.ActiveCard.hp,1) / opponent.ActiveCard.maxHp * 100
+
+        # update damage stats
+        player.stats.total_damage_inflicted += self._TotalDamage
+        opponent.stats.total_damage_received += self._TotalDamage
         
         #print(f"Attack {self.damage}  -  self._TotalDamage {self._TotalDamage}")
 

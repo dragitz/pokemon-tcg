@@ -87,3 +87,23 @@ class Player:
     def removeCard(self, id:int):
         self.cards.pop(0)
     
+    def printStats(self):
+
+        name = self.name
+        stats = self.stats
+
+        print(name +" Stats:")
+
+        print(" ","Wins: ",stats.wins)
+        print(" ","knockout_without_backup: ",stats.knockout_without_backup)
+        print(" ","Games started as first player: ",stats.total_games_first)
+        print(" ","total_damage_inflicted: ",stats.total_damage_inflicted)
+        print(" ","total_damage_received: ",stats.total_damage_received)
+        print(" ","total_coin_tosses: ",stats.total_coin_tosses)
+        print(" ","total_coin_tosses_wins: ",stats.total_coin_tosses_wins)
+        print(" ","gold_wins: ",stats.gold_wins)
+        print(" ","silver_wins: ",stats.silver_wins)
+        print(" ","bronze_wins: ",stats.bronze_wins)
+        print(" ","total_monsters_killed: ",stats.total_monsters_killed)
+        print(" ","total_monsters_lost: ",stats.total_monsters_lost)
+        print(" ","total_turns: ",stats.total_turns)

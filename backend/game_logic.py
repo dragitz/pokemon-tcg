@@ -75,24 +75,25 @@ class Game:
         for q in range(0,DECK_SIZE):
                 
                 # How many coinfilps the move does
-                TOTAL_COINFLIPS = random.randint(0,3) 
+                TOTAL_COINFLIPS = random.randint(0,3)
+                
                 move_1 = Move(
                     before_attack=f"""
                     function()
-                        if heads >= 1 then
-                            damage = damage + 10
-                        end
+                        
+                        damage = 30 * heads
+                        
                     end
                     """,
                     after_attack="",
                     move_type="Attack", # note: currently unused
-                    energy_cost=random.randint(0,4),
-                    damage=100,
+                    energy_cost=random.randint(1,4),
+                    damage=0,
 
                     coinflips=TOTAL_COINFLIPS,
                 )
                 #card = PokemonCard(q,False,0,random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]),move_1)
-                card = PokemonCard(q, False, Stages.BASIC, 100, move_1, PokemonType.GRASS)
+                card = PokemonCard(q, False, Stages.BASIC, random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]), move_1, PokemonType.GRASS)
                 
                 fakeDeck.append(card)
 
@@ -418,9 +419,6 @@ class Game:
                     player.drawCard(1)
                     #print(f"{self.turns}")
 
-                # check if top card needs to be placed on board slot 0 (main pokemon)
-                #if player.ActiveCard == None:
-                    #player.placeCard()
 
                 # define active card
                 active_card = player.ActiveCard
@@ -444,10 +442,24 @@ class Game:
                         break
 
                     self.decideAction(player, opponent)
+
+                    # win condition check
+                    if player.localGameTurnWins == 3:
+                        self.gameFinished = True
+
+                        player.stats.wins += 1
+                        opponent.stats.losses += 1
+                        print("")
+                        break
+
                     player.valid_actions = []
 
                 # Change turn
                 self.PlayerTurn = 1 - self.PlayerTurn
+        
+        # print end game stats for both players
+        self.Player1.printStats()
+        self.Player2.printStats()
 
 
     
