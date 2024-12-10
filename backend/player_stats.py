@@ -2,7 +2,8 @@ class PlayerStats:
     def __init__(self):
         self.wins = 0
         self.losses = 0
-
+        self.knockout_without_backup = 0
+        
         self.total_games = 0
         self.total_games_first = 0
         self.total_games_first_won = 0

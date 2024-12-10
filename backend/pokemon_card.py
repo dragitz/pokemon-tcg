@@ -37,7 +37,7 @@ class Move:
         move_data = game_logic.parse_logic(self)
         return move_data
     
-    def execute_logic(self, game_logic):
+    def execute_logic(self):
         global lua
         lua_script = lua.eval(self.logic)
 

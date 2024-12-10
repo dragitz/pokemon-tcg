@@ -25,6 +25,7 @@ class Player:
 
         self.valid_actions = []
         self.end_turn = False
+        
     
     def placeCard(self):
         
@@ -58,12 +59,15 @@ class Player:
         for i in range(0,min(amount,len(self.deck))):
             self.cards.append(self.deck.pop(0))
 
-    def getBasicCardsAvailable(self):
+    def getBasicCardsInHand(self):
         valid = []
-        
         for i in range(len(self.cards)):
             if self.cards[i].stage == Stages.BASIC:
                 valid.append(self.cards[i])
+        return valid
+
+    def getBasicCardsAvailable(self):
+        valid = self.getBasicCardsInHand()
 
         if self.Bench_1 is not None and self.Bench_1.stage == Stages.BASIC:
             valid.append(self.Bench_1)

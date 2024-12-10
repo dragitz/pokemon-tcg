@@ -120,12 +120,11 @@ class Game:
         self.logic = GameLogic()
 
         self.PlayerTurn = 0
-        self.TotalTurns = 0
 
         self.starting_player = 0
 
-        self.Player1 = None
-        self.Player2 = None
+        self.Player1:Player = None
+        self.Player2:Player = None
 
         self.turns = 0
         self.isSetup = True
@@ -238,19 +237,24 @@ class Game:
     def getBench(self, player_id:int):
         pass
     
-    def executeAction(self, player, actionId:int):
+    def executeAction(self, player:Player, actionId:int):
+        
+
+        
+
         # this will kill the infinite loop
         if actionId == Actions.END_TURN:
             player.end_turn = True
             
-            if self.isSetup and self.TotalTurns > 1:
+            if self.isSetup and self.turns > 1:
                 self.isSetup = False
-        
-        game_logic = GameLogic()
+        print(f"Action: {actionId},   player: {player.name},   player.end_turn: {player.end_turn}")
+        print("")
 
         # allow agent to pick a move
         if actionId == Actions.ATTACK:
-            player.ActiveCard.move_1.execute_logic(game_logic)
+            player.end_turn = True
+            player.ActiveCard.move_1.execute_logic()
             
 
         
@@ -258,85 +262,103 @@ class Game:
     def decideAction(self, player):
         # here we code the ai to choose something
         # right now it's pure randomness
-        actionId = random.choice(player.valid_actions)
-
+        actionId = random.choice(player.valid_actions)        
         self.executeAction(player, actionId)
     
-    def getValidActions(self, player):
-        
-        # During the setup phase, first card must be the Active pokemon
-        if self.isSetup and player.ActiveCard is None:
-            return [Actions.PLACE_ACTIVE, Actions.PLACE_BENCH]
-        
-        valid_actions = []
-
-        # During the setup phase, after placing an active pokemon, if any other basic pokemon is available
-        # allow agent to place them on the bench
-        if self.isSetup and player.ActiveCard is not None:
-            valid_actions.append(Actions.END_TURN)
-            if player.getBasicCardsAvailable() > 0 and len(player.Bench) < 3:
-                valid_actions.append(Actions.PLACE_BENCH)
-
-            return valid_actions
-        
-        
-
-        # Always available
-        valid_actions.append(Actions.END_TURN)
-
+    def getValidActions(self, player:Player):
         free_bench_slots = 3
         if player.Bench_1 is not None: free_bench_slots -= 1
         if player.Bench_2 is not None: free_bench_slots -= 1
         if player.Bench_3 is not None: free_bench_slots -= 1
 
-        # I don't think it's worth to have both options, as it could be considered as a waste of energy
-        # eg, you just placed a pokemon in your active slot and waste energy to remove it?
-        if player.ActiveCard == None:
-            # check if player has basic pokemons that can be moved from either deck or bench
-            if player.getBasicCardsAvailable() > 0:
-                valid_actions.append(Actions.PLACE_ACTIVE)
+        valid_actions = []
 
-        elif player.ActiveCard.energy >= player.ActiveCard.retreatCost:
-            valid_actions.append(Actions.RETREAT)
         
-        # check if player can place any pokemon in the bench, active pokemon must exist
-        if player.ActiveCard is not None and free_bench_slots < 3:
-            # check if player has basic pokemons that can be moved from either deck or bench
-            if player.getBasicCardsAvailable() > 0:
-                valid_actions.append(Actions.PLACE_BENCH)
+        
+        if self.isSetup:
+            
+            # During the setup phase, first card must be the Active pokemon
+            # we already ensured player receives a playable pokemon at the start of the game (initial draw phase)
+            if player.ActiveCard is None:
+                return [Actions.PLACE_ACTIVE]
+            
+            # During the setup phase, after placing an active pokemon, if any other basic pokemon is available
+            # allow agent to place them on the bench
+            if player.ActiveCard is not None:
+                valid_actions.append(Actions.END_TURN)
+                if len(player.getBasicCardsAvailable()) > 0 and free_bench_slots < 3:
+                    valid_actions.append(Actions.PLACE_BENCH)
 
-        # give energy to any card on the board
-        # note: this does not check which type of energy you have vs the pokemon type/move
-        #       in this simulation energies are all neutral (for now)
-        # note: still checking for the active card, even though at this point the player should have one (because of the above checks)
-        if player.energy > 0 and (player.ActiveCard is not None or free_bench_slots > 0):
-                valid_actions.append(Actions.SET_ENERGY)
+                return valid_actions
+        
+        else:
+        
+
+            # Always available
+            #valid_actions.append(Actions.END_TURN)
+
+            # I don't think it's worth to have both options, as it could be considered as a waste of energy
+            # eg, you just placed a pokemon in your active slot and waste energy to remove it?
+
+            # Always ensure active card is present
+            if player.ActiveCard == None:
+                # check if player has basic pokemons that can be moved from either deck or bench
+                if player.getBasicCardsAvailable() > 0:
+                    valid_actions.append(Actions.PLACE_ACTIVE)
+                else:
+                    # knockout without backup
+                    # ggs
+                    return []
+            else:
+
+                if player.ActiveCard.energy >= player.ActiveCard.retreatCost:
+                    valid_actions.append(Actions.RETREAT)
                 
-        # check if active pokemon can attack
-        if player.ActiveCard is not None and not player.ActiveCard.attackDisabled:
-            for move in player.ActiveCard.moves:
-                if player.ActiveCard.energy >= move.energy_cost:
-                    # valid move has been found
-                    valid_actions.append(Actions.ATTACK)
-                    break
+                # check if player can place any pokemon in the bench, active pokemon must exist
+                if player.ActiveCard is not None and free_bench_slots < 3:
+                    # check if player has basic pokemons that can be moved from either deck or bench
+                    if player.getBasicCardsAvailable() > 0:
+                        valid_actions.append(Actions.PLACE_BENCH)
 
-        # to be coded:
-        """
-        RETREAT     <-- swap position of your active pokemon with one in the bench
-                    <-- can be done once per turn
-        
-        EVOLVE
-        SURREND     <-- hard one to code, force a surrend if ai can't do anything?
+                # give energy to any card on the board
+                # note: this does not check which type of energy you have vs the pokemon type/move
+                #       in this simulation energies are all neutral (for now)
+                # note: still checking for the active card, even though at this point the player should have one (because of the above checks)
+                if player.energy > 0 and (player.ActiveCard is not None or free_bench_slots > 0):
+                        valid_actions.append(Actions.SET_ENERGY)
+                        
+                
+                # check if active pokemon can attack ( this won't work )
+                if player.ActiveCard is not None and not player.ActiveCard.attackDisabled and 1 == 2:
+                    for move in player.ActiveCard.moves:
+                        if player.ActiveCard.energy >= move.energy_cost:
+                            # valid move has been found
+                            valid_actions.append(Actions.ATTACK)
+                            break
+                
+                # check if active pokemon can attack (test method)
+                if player.ActiveCard is not None and not player.ActiveCard.attackDisabled:
+                    if player.ActiveCard.energy >= player.ActiveCard.move_1.energy_cost:
+                        # valid move has been found
+                        valid_actions.append(Actions.ATTACK)
 
-        ATTACK      <-- attacking will end the turn
+                # to be coded:
+                """
+                RETREAT     <-- swap position of your active pokemon with one in the bench
+                            <-- can be done once per turn
+                
+                EVOLVE
+                SURREND     <-- hard one to code, force a surrend if ai can't do anything?
 
-        USE_ITEM    <-- use any item as much as you have in your turn
-        USE_SUPPORT <-- use one at most per turn
-        USE_ABILITY <-- some are active, some are passive, it really depends LOL 
-                        (i laugh because I'll have to suffer while coding every ability)
-        """
+                ATTACK      <-- attacking will end the turn
 
-        return valid_actions
+                USE_ITEM    <-- use any item as much as you have in your turn
+                USE_SUPPORT <-- use one at most per turn
+                USE_ABILITY <-- some are active, some are passive, it really depends LOL 
+                                (i laugh because I'll have to suffer while coding every ability)
+                """
+
+            return valid_actions
 
     
         
@@ -374,7 +396,6 @@ class Game:
         self.Player2.Bench_2 = None
         self.Player2.Bench_3 = None
 
-        self.TotalTurns = 0
         self.gameFinished = False
 
         self.turns = 0
@@ -407,7 +428,7 @@ class Game:
             print(len(self.Player1.cards))
 
             valid_cards = self.Player1.getBasicCardsAvailable()
-            print(len(valid_cards))
+            
             while len(valid_cards) == 0:
                 p1_reshuffles += 1
                 
@@ -447,11 +468,14 @@ class Game:
             # who begins, track it, set to true 
             self.setInitialPlayer()
 
-
+            print(self.GAMES)
             while not self.gameFinished:
                 
                 # Current game turns
                 self.turns += 1
+                
+                if self.isSetup and self.turns > 1:
+                    self.isSetup = False
                 
                 # set player for current turn
                 if self.PlayerTurn == 1:
@@ -468,7 +492,7 @@ class Game:
                 player.stats.total_turns += 1
 
                 # give energy
-                if self.TotalTurns >= 1 and not self.isSetup:
+                if self.turns >= 1 and not self.isSetup:
                     player.energy = 1
                     player.drawCard(1)
 
@@ -484,20 +508,24 @@ class Game:
                 # Here we collect valid actions into an array, the ai will have to pick one
                 while not player.end_turn:
                     player.valid_actions = self.getValidActions(player)
+                    print(f"setup: {self.isSetup}   player.end_turn {player.end_turn}    turn: {self.turns}")
+
+                    if len(player.valid_actions) < 1:
+                        self.gameFinished = True
+                        
+                        player.stats.losses += 1
+                        player.stats.knockout_without_backup += 1
+
+                        opponent.stats.wins += 1
+                        break
+
                     self.decideAction(player)
+                    player.valid_actions = []
 
-                # check if we have used our free energy
-                # try attacking once card has been placed, given the turn id is greater than 0 (can not attack on the first turn) + can not attack empty slots
-                if self.TotalTurns > 0 and player.Active is not None and opponent.Active is not None:
-                    
-                    valid_moves = active_card.getValidMoves()
+                # Change turn
+                self.PlayerTurn = 1 - self.PlayerTurn
 
-                    # usually cards have moves, ensure this is true
-                    # if false: ignore attacks
-                    if len(valid_moves) > 0:
 
-                        # here the ai should pick between a move
-                        move = random.choice(active_card.moves)
     
 
 class Rules:
