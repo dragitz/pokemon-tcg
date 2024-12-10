@@ -15,11 +15,11 @@ class CardType(Enum):
     MONSTER = 0
     ITEM    = 1
 
-lua = LuaRuntime(unpack_returned_tuples=True)
+
 
 class Move:
-    def __init__(self, logic, move_type, energy_cost=1, damage=0, coinflips=0, debuffs=[]):
-        self.logic = logic
+    def __init__(self, before_attack, after_attack, move_type, energy_cost=1, damage=0, coinflips=0, debuffs=[]):
+        
         self.move_type = move_type
         
         self.damage = damage
@@ -32,33 +32,34 @@ class Move:
         self._TotalDamage = 0
         self._TotalHealing = 0
 
+        self.before_attack = before_attack
+        self.after_attack = after_attack
 
     def execute_logic_old(self, game_logic):
         move_data = game_logic.parse_logic(self)
         return move_data
     
     def execute_logic(self):
-        global lua
-        lua_script = lua.eval(self.logic)
+        lua = LuaRuntime()
+        lua_script_before_attack = lua.eval(self.before_attack)
+        lua_script_after_attack = lua.eval(self.after_attack)
 
-        
+        # Define properties that both script will access
         lua_globals = lua.globals()
         lua_globals.damage = self.damage
-        lua_globals.coinflips = self.coinflips
+        #lua_globals.coinflips = self.coinflips
 
-        def flip_coin(amount):
-            heads = 0
-            for i in range(amount):
-                if random.randint(0,1) > 0:
-                    heads += 1
-            return heads
+        lua_globals.heads = 1
+        for i in range(self.coinflips):
+            if random.randint(0,1) > 0:
+                lua_globals.heads += 1
         
-        # store function for coin clips
-        lua_globals.flip = flip_coin
+        # execute both scripts here
+        print(f"heads: {lua_globals.heads}")
+        lua_script_before_attack()
+        #lua_script_after_attack()
 
-        # events
-        lua_script.before_attack()   # coinflips
-        lua_script.after_attack()    # debuffs, remove enrgy
+        #lua_script.after_attack()    # debuffs, remove enrgy
 
         self._TotalDamage = lua_globals.damage
         print(f"Attack {self.damage}  -  self._TotalDamage {self._TotalDamage}")

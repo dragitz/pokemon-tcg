@@ -4,6 +4,7 @@ from backend.player_stats import PlayerStats
 
 from lupa import LuaRuntime
 
+
 game = Game()
 
 player1 = Player(0,"bot00",PlayerStats())

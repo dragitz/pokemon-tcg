@@ -6,105 +6,6 @@ from .enums import *
 
 import lupa
 
-class GameLogic:
-    def __init__(self):
-        self.variables = {"HEADS": 0}  # Store computed values like HEADS here
-
-    def start_game(self):
-        pass
-
-    def attack(self, move, multiplier=1):
-        #print(f"Attacking for {move.damage * multiplier} damage!")
-        move._TotalDamage = move.damage * multiplier
-        return move
-        
-
-    def heal(self, amount):
-        print(f"Healing for {amount} health!")
-    
-    def apply_debuff(self, debuff_type):
-        pass
-
-    def draw_card(self,amount):
-        print(f"Drawing {amount} card(s)")
-    
-    def throw_card(self, amount):
-        print(f"Threw {amount} card(s) away")
-
-    def place_card(self, card, slot):
-        pass
-    
-    def retreat(self, retreat_amount):
-        if retreat_amount >= 2:
-            print("Pokemon retreated")
-        else:
-            print("Pokemon not retreated")
-
-    def flip_coin(self, coin_flips):
-        self.variables["HEADS"] = 0
-        for i in range(0,coin_flips):
-            if random.randint(0,1) == 1:
-                self.variables["HEADS"] += 1
-        #print(self.variables["HEADS"])
-
-    def parse_logic(self, move_edit):
-
-        logic = move_edit.logic
-        lines = logic.strip().split("\n")
-        for line in lines:
-            line = line.strip()  # remove surrounding whitespace
-            if not line:
-                continue
-
-            parts = line.split(" ")
-            # checking the length of min 6 is a quick hack
-            # cards do not vary much in term of ability, if more effects are required, they can be coded in a different line
-            if len(parts) >= 6 and parts[0] == "IF" and parts[2] in {">=", "<=", "==", ">", "<"} and parts[4] == "THEN":
-                
-                
-                variable = parts[1]
-                operator = parts[2]
-                threshold = int(parts[3])
-                
-                if variable in self.variables:
-                    value = self.variables[variable]
-                    condition_met = False
-                    if operator == ">=" and value >= threshold:
-                        condition_met = True
-                    elif operator == "<=" and value <= threshold:
-                        condition_met = True
-                    elif operator == ">" and value > threshold:
-                        condition_met = True
-                    elif operator == "<" and value < threshold:
-                        condition_met = True
-                    elif operator == "==" and value == threshold:
-                        condition_met = True
-
-                    # 
-                    if condition_met:
-                        action = parts[5]
-                        if "*" in action:
-                            action, multiplier = action.split("*")
-                            if multiplier.isdigit():
-                                multiplier = int(multiplier)
-                            elif multiplier in self.variables:
-                                multiplier = self.variables[multiplier]
-                            else:
-                                raise ValueError(f"Unknown multiplier: {multiplier}")
-                        else:
-                            multiplier = 1
-
-                        # execute the action
-                        if action == "ATTACK":
-                            move_edit = self.attack(move_edit, multiplier)
-                        elif action == "HEAL":
-                            self.heal(move_edit.damage * multiplier)
-                        elif action == "RETREAT":
-                            self.retreat(2)
-                        elif action == "DRAW":
-                            self.retreat(2)
-        
-        return move_edit
 
 
 ############################################################
@@ -117,7 +18,6 @@ class Game:
         self.game_id = 0
         
         self.rules = Rules()
-        self.logic = GameLogic()
 
         self.PlayerTurn = 0
 
@@ -168,34 +68,6 @@ class Game:
     # see createFakeDeck() for a temp replacement
     def loadDeck(self):
         pass
-
-    def createFakeDeck(self):
-        fakeDeck = []
-        DECK_SIZE = self.rules.DECK_SIZE
-        for q in range(0,DECK_SIZE):
-                
-                # How many coinfilps the move does
-                TOTAL_COINFLIPS = random.randint(0,3) 
-                # how many attacks per head are required in order to make an attack
-                # this is just a test for the logic of the parser, i don't think there's such a card with similar conditions
-                REQUIRED_HEADS = random.randint(0, TOTAL_COINFLIPS) if TOTAL_COINFLIPS > 0 else 0
-                move = Move(
-                    logic=f"""
-                    IF HEADS >= {REQUIRED_HEADS} THEN ATTACK*HEADS
-                    """,
-                    move_type="Attack", # note: currently unused
-                    energy_cost=random.randint(0,4),
-                    damage=random.choice([20,25,30,35,45,50,55,60,70,80,90]),
-
-                    coinflips=TOTAL_COINFLIPS,
-                )
-                moves = [move]
-                #card = PokemonCard(q,False,0,random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]),moves)
-                card = PokemonCard(q, False, Stages.BASIC, 100, move, PokemonType.GRASS)
-                
-                fakeDeck.append(card)
-
-        return fakeDeck
         
     def createFakeDeck2(self):
         fakeDeck = []
@@ -205,15 +77,14 @@ class Game:
                 # How many coinfilps the move does
                 TOTAL_COINFLIPS = random.randint(0,3) 
                 move_1 = Move(
-                    logic=f"""
-                    function before_attack()
-                        local heads = flip(1)
-                        if heads == 1 then
+                    before_attack=f"""
+                    function()
+                        if heads >= 1 then
                             damage = damage + 10
                         end
                     end
-                    
                     """,
+                    after_attack="",
                     move_type="Attack", # note: currently unused
                     energy_cost=random.randint(0,4),
                     damage=100,
@@ -229,32 +100,54 @@ class Game:
         
     #####################################################
 
-    def giveEnergy(self, player_id:int):
-        pass
-    def getActiveCard(self, player_id:int):
-        pass
-
-    def getBench(self, player_id:int):
+    def _get_ally_pokemon(self,player:Player):
         pass
     
+
+    def giveEnergy(self, player:Player):
+        pokemons = [player.ActiveCard]
+        
+        if player.Bench_1 is not None: pokemons.append(player.Bench_1)
+        if player.Bench_2 is not None: pokemons.append(player.Bench_2)
+        if player.Bench_3 is not None: pokemons.append(player.Bench_3)
+        
+        # use brain functions to decide which pokemon should get energy
+        # for now it's random
+        pokemon = random.choice(pokemons)
+        pokemon.energy += 1
+
+
+    def getActiveCard(self, player:Player):
+        pass
+
+    def getBench(self, player:Player):
+        pass
+    
+
     def executeAction(self, player:Player, actionId:int):
         
-
-        
-
         # this will kill the infinite loop
         if actionId == Actions.END_TURN:
             player.end_turn = True
-            
-            if self.isSetup and self.turns > 1:
-                self.isSetup = False
+            return    
+        
         print(f"Action: {actionId},   player: {player.name},   player.end_turn: {player.end_turn}")
         print("")
 
-        # allow agent to pick a move
+        # note: must allow agent to pick a move
         if actionId == Actions.ATTACK:
             player.end_turn = True
             player.ActiveCard.move_1.execute_logic()
+            return
+        
+        if actionId == Actions.SET_ENERGY:
+            self.giveEnergy(player)
+            player.energy -= 1
+            return
+
+
+        
+
             
 
         
@@ -311,7 +204,7 @@ class Game:
                     return []
             else:
 
-                if player.ActiveCard.energy >= player.ActiveCard.retreatCost:
+                if player.ActiveCard.energy >= player.ActiveCard.retreatCost and free_bench_slots < 3:
                     valid_actions.append(Actions.RETREAT)
                 
                 # check if player can place any pokemon in the bench, active pokemon must exist
@@ -474,7 +367,7 @@ class Game:
                 # Current game turns
                 self.turns += 1
                 
-                if self.isSetup and self.turns > 1:
+                if self.isSetup and self.turns > 2:
                     self.isSetup = False
                 
                 # set player for current turn
