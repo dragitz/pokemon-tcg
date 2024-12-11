@@ -4,3 +4,4 @@
 *.pyc
 /frontend
 /_ignore
+/data
