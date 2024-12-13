@@ -5,6 +5,8 @@ from .enums import PokemonType
 
 from lupa import LuaRuntime
 
+
+
 class Stages(Enum):
     BASIC = "BASIC"
     STAGE_1 = "STAGE_1"
@@ -16,6 +18,9 @@ class CardType(Enum):
     MONSTER = 0
     ITEM    = 1
 
+class Category(Enum):
+    POKEMON = 0
+    ITEM    = 1
 
 
 class Move:
@@ -76,10 +81,31 @@ class Move:
         #print(f"Attack {self.damage}  -  self._TotalDamage {self._TotalDamage}")
 
 class PokemonCard:
-    def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, move_1:Move, type:PokemonType, retreat_cost = 2, asset_name = ""):
+    def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, move_1:Move, type:PokemonType, CategoryType:Category, retreat_cost = 2, asset_name = "") :
 
         self.id = id
 
+        # New data
+        self.category = CategoryType
+        self.types   = [] # Gradd, Fire, Psycho
+        self.stage   = stage
+        self.retreatCost = retreat_cost
+        self.dexId = 32,
+        self.evolveFrom = "",
+        self.weaknesses = ""
+        self.attacks = []
+        """
+        attacks:
+            [{
+                    cost: ["Colorless", "Colorless"],
+
+                    name: {
+                        en: "Bug Bite"
+                    },
+
+                    damage: "30"
+                }]
+        """
         # Base data
         self.maxHp = maxHp
         self.hp    = self.maxHp
@@ -94,7 +120,7 @@ class PokemonCard:
         #self.ability = ability
 
         self.isEx = isEx
-        self.stage = stage
+        
         
         self.type = type
         
@@ -103,11 +129,10 @@ class PokemonCard:
         # Dynamic data
         self.energy = 0
         self.placed_turn = 0
-        self.retreatCost = retreat_cost
+        
         self.attackDisabled = False
 
         # Other
-        self.rarity = 0
         self.asset = "assets/"+asset_name
 
         
@@ -123,4 +148,5 @@ class PokemonCard:
             if self.energy >= move.energy_cost:
                 valid_moves.append(move)
         return valid_moves
+
 
