@@ -36,6 +36,7 @@ class Game:
         self.MAX_SIMULATED_GAMES = 10
 
         self.debugEvents = False
+        self.printStats = True
     
     def createPlayers(self, Player1, Player2):
         if Player1 == None:
@@ -119,7 +120,7 @@ class Game:
             
             if Category == CategoryType.POKEMON:
                 maxHp = data["hp"]
-                types = CardType.NONE
+                types = [CardType.NONE]
                 if "types" in data:
                     types = data["types"]
 
@@ -216,7 +217,7 @@ class Game:
             player.Bench.append(player.cards.pop(card_index))
             return
         
-        print("placeHandCardOnBench::This should not get hit, wtf?")
+        print(f"placeHandCardOnBench::This should not get hit, wtf? isSetup: {self.isSetup}")
         return
 
         
@@ -250,7 +251,11 @@ class Game:
         # note: must allow agent to pick a move
         if actionId == Actions.ATTACK:
             player.end_turn = True
-            player.ActiveCard.move_1.execute_logic(player, opponent)
+
+            # dev note: this is a hardcoded action (only move 1)
+            move = player.ActiveCard.attacks[0]
+            move.execute_logic(player, opponent)
+            #player.ActiveCard.move_1.execute_logic(player, opponent)
 
             # check if we killed the opponent's active pokemon
             if opponent.ActiveCard.hp <= 0:
@@ -304,8 +309,8 @@ class Game:
             
 
             # try to ensure at least one pokemon is in the bench
-            if free_bench_slots == 3 and len(player.getBasicCardsInHand()) > 0:
-                return [Actions.PLACE_BENCH]
+            #if free_bench_slots == 3 and len(player.getBasicCardsInHand()) > 0:
+            #    return [Actions.PLACE_BENCH]
 
             # give energy to any card on the board
             # note: this does not check which type of energy you have vs the pokemon type/move
@@ -323,17 +328,18 @@ class Game:
                 valid_actions.append(Actions.RETREAT)
             
             # check if player can place any pokemon in the bench
-            if free_bench_slots > 0:
-                # check if player has basic pokemons that can be moved from either deck or bench
-                if len(player.getBasicCardsAvailable()) > 0:
-                    valid_actions.append(Actions.PLACE_BENCH)
+            # check if player has basic pokemons that can be moved from either deck or bench
+            if free_bench_slots > 0 and len(player.getBasicCardsInHand()) > 0:
+                valid_actions.append(Actions.PLACE_BENCH)
 
 
                     
             
             # check if active pokemon can attack (test method)
-            if not player.ActiveCard.attackDisabled and opponent.ActiveCard is not None:
-                if player.ActiveCard.energy >= len(player.ActiveCard.attacks[0].cost):
+            # dev note: this is a WIP
+            if not player.ActiveCard.attackDisabled and opponent.ActiveCard is not None and len(player.ActiveCard.attacks) > 0:
+                move = player.ActiveCard.attacks[0]
+                if player.ActiveCard.energy >= move.energy_cost:
                     # valid move has been found
                     valid_actions.append(Actions.ATTACK)
                     
@@ -509,6 +515,16 @@ class Game:
                 # increase the total amount of turns a player has played
                 player.stats.total_turns += 1
 
+                # check if current player doesn't have any card left to draw in the deck
+                if len(player.deck) < 1:
+                    self.gameFinished = True
+                    
+                    player.stats.losses += 1
+                    player.stats.deckouts += 1
+
+                    opponent.stats.wins += 1
+                    break
+
                 if self.turns >= 3:
                     player.drawCard(1)
                 if self.turns >= 4:
@@ -557,8 +573,9 @@ class Game:
                 self.PlayerTurn = 1 - self.PlayerTurn
         
         # print end game stats for both players
-        self.Player1.printStats()
-        self.Player2.printStats()
+        if self.printStats:
+            self.Player1.printStats()
+            self.Player2.printStats()
 
 
     

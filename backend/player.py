@@ -99,6 +99,7 @@ class Player:
 
         print(" ","Wins: ",stats.wins)
         print(" ","knockout_without_backup: ",stats.knockout_without_backup)
+        print(" ","deckouts: ",stats.deckouts)
         print(" ","Games started as first player: ",stats.total_games_first)
         print(" ","total_damage_inflicted: ",stats.total_damage_inflicted)
         print(" ","total_damage_received: ",stats.total_damage_received)

@@ -1,4 +1,5 @@
 import random
+import re
 from enum import Enum
 from .enums import PokemonType
 
@@ -33,6 +34,7 @@ class Move:
         self.move_type = move_type
         
         self.damage = damage
+
         self.coinflips = coinflips
         self.debuffs = debuffs
         self.cards_drawn = 0
@@ -75,8 +77,11 @@ class Move:
         self._TotalDamage = lua_globals.damage
 
         # simple damage calculation
+        print("llllllllllllll: ",opponent.ActiveCard.hp)
+        print("llllllllllllll: ",self._TotalDamage)
+
         opponent.ActiveCard.hp -= self._TotalDamage
-        opponent.ActiveCard.health_bar = max(opponent.ActiveCard.hp,1) / opponent.ActiveCard.maxHp * 100
+        opponent.ActiveCard.health_bar = max(opponent.ActiveCard.hp,1) / max(opponent.ActiveCard.maxHp,1) * 100
 
         # update damage stats
         player.stats.total_damage_inflicted += self._TotalDamage
@@ -98,7 +103,33 @@ class PokemonCard:
 
         self.attacks = []
         for attack in attacks: # dev note: finish this
-            continue
+            
+            print(self.name)
+            print(attack["name"])
+
+            energy_cost = len(attack["cost"])
+            
+            if "damage" in attack:
+                damage = attack["damage"]
+                damage = damage.replace("+", "")
+                damage = int(damage.replace("x", ""))
+            else:
+                damage = 0
+            
+            # dev note: to be coded
+            coinflips = 0
+            debuffs = []
+
+            move = Move(
+                attack["before_attack"], 
+                attack["after_attack"], 
+                self.types[0], 
+                energy_cost, 
+                damage, 
+                coinflips, 
+                debuffs
+                )
+            self.attacks.append(move)
 
         self.retreatCost = retreatCost
         self.evolveFrom = evolveFrom

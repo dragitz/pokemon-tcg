@@ -3,6 +3,7 @@ class PlayerStats:
         self.wins = 0
         self.losses = 0
         self.knockout_without_backup = 0
+        self.deckouts = 0
         
         self.total_games = 0
         self.total_games_first = 0
