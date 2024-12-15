@@ -77,9 +77,6 @@ class Move:
         self._TotalDamage = lua_globals.damage
 
         # simple damage calculation
-        print("llllllllllllll: ",opponent.ActiveCard.hp)
-        print("llllllllllllll: ",self._TotalDamage)
-
         opponent.ActiveCard.hp -= self._TotalDamage
         opponent.ActiveCard.health_bar = max(opponent.ActiveCard.hp,1) / max(opponent.ActiveCard.maxHp,1) * 100
 
@@ -103,10 +100,6 @@ class PokemonCard:
 
         self.attacks = []
         for attack in attacks: # dev note: finish this
-            
-            print(self.name)
-            print(attack["name"])
-
             energy_cost = len(attack["cost"])
             
             if "damage" in attack:
@@ -137,6 +130,7 @@ class PokemonCard:
 
         self.isEx = isEx
 
+        # dynamic
         self.energy = 0
         self.placed_turn = 0
         

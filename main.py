@@ -12,10 +12,10 @@ player2 = Player(1,"bot01",PlayerStats())
 
 game.createPlayers(player1,player2)
 
-game.debugEvents = True
+game.debugEvents = False
 game.printStats = True
 
-game.MAX_SIMULATED_GAMES = 10
+game.MAX_SIMULATED_GAMES = 1000
 
 game.playGame()
 

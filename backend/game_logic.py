@@ -196,6 +196,7 @@ class Game:
             card = random.choice(cards)
             card_index = cards.index(card)
             player.ActiveCard = player.cards.pop(card_index)
+            player.ActiveCard.placed_turn = self.turns
             return
         
         cards = player.getBasicCardsInBench()
@@ -203,6 +204,7 @@ class Game:
             card = random.choice(cards)
             card_index = cards.index(card)
             player.ActiveCard = player.Bench.pop(card_index)
+            player.ActiveCard.placed_turn = self.turns
             return
 
         print("placeActiveCard::This should not get hit, wtf?")
@@ -214,7 +216,9 @@ class Game:
         if len(cards) > 0:
             card = random.choice(cards)
             card_index = cards.index(card)
-            player.Bench.append(player.cards.pop(card_index))
+            selected_card = player.cards.pop(card_index)
+            selected_card.placed_turn = self.turns
+            player.Bench.append(selected_card)
             return
         
         print(f"placeHandCardOnBench::This should not get hit, wtf? isSetup: {self.isSetup}")
@@ -344,6 +348,7 @@ class Game:
                     valid_actions.append(Actions.ATTACK)
                     
 
+            # get evolutions in hand and check if that card can be 
             # to be coded:
             """
             RETREAT     <-- swap position of your active pokemon with one in the bench
