@@ -313,6 +313,8 @@ class Game:
             if len(player.possible_evolutions) == 0:
                 print("Actions.EVOLVE: size zero (should not happen)")
                 return
+            player.stats.total_evolutions += 1
+            
             # dev note: let the ai choose
             chosen_evolution = random.choice(player.possible_evolutions)
             chosen_index = player.possible_evolutions.index(chosen_evolution)
