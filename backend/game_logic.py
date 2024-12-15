@@ -95,12 +95,16 @@ class Game:
                     coinflips=TOTAL_COINFLIPS,
                 )
                 #card = PokemonCard(q,False,0,random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]),move_1)
-                card = PokemonCard(q, False, Stages.BASIC, random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]), move_1, PokemonType.GRASS)
+                card = PokemonCard(q, False, Stages.BASIC, random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]), move_1, PokemonType.GRASS, CardType.MONSTER)
                 
                 fakeDeck.append(card)
 
         return fakeDeck
-        
+    
+    def createFakeDeck3(self):
+        # randomly load a card from the db
+
+        pass
     #####################################################
 
     def _get_ally_pokemon(self,player:Player):

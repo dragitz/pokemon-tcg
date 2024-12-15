@@ -81,59 +81,31 @@ class Move:
         #print(f"Attack {self.damage}  -  self._TotalDamage {self._TotalDamage}")
 
 class PokemonCard:
-    def __init__(self, id:int, isEx:bool, stage:Stages, maxHp:int, move_1:Move, type:PokemonType, CategoryType:Category, retreat_cost = 2, asset_name = "") :
+    def __init__(self, CategoryType:Category, name:str, maxHp:int, types, stage:Stages, attacks, retreatCost:int, evolveFrom:str, weaknesses:PokemonType, isEx:bool) :
 
-        self.id = id
-
-        # New data
         self.category = CategoryType
-        self.types   = [] # Gradd, Fire, Psycho
-        self.stage   = stage
-        self.retreatCost = retreat_cost
-        self.dexId = 32,
-        self.evolveFrom = "",
-        self.weaknesses = ""
-        self.attacks = []
-        """
-        attacks:
-            [{
-                    cost: ["Colorless", "Colorless"],
-
-                    name: {
-                        en: "Bug Bite"
-                    },
-
-                    damage: "30"
-                }]
-        """
-        # Base data
+        self.name = name
+        self.hp = maxHp
         self.maxHp = maxHp
-        self.hp    = self.maxHp
         self.health_bar = 100   # placeholder, will be updated upon taking damage
 
-        self.moves = []
-        self.moves.append(move_1) # temp fix
+        self.types = types
+        self.stage = stage
 
-        # 
-        self.move_1 = move_1
-        #self.move_2 = move_2
-        #self.ability = ability
+        self.attacks = []
+        self.retreatCost = retreatCost
+        self.evolveFrom = evolveFrom
+        self.weaknesses = weaknesses
 
         self.isEx = isEx
-        
-        
-        self.type = type
-        
-        # Buffs/Debuffs
 
-        # Dynamic data
         self.energy = 0
         self.placed_turn = 0
         
         self.attackDisabled = False
 
         # Other
-        self.asset = "assets/"+asset_name
+        self.asset = "assets/images"+self.name+".png"
 
         
     
