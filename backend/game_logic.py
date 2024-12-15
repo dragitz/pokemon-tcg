@@ -115,7 +115,7 @@ class Game:
                 Category = CategoryType.TRAINER
 
             Name = data["name"]
-            print(Name, data["category"])
+            #print(Name, data["category"])
             
             if Category == CategoryType.POKEMON:
                 maxHp = data["hp"]
@@ -123,7 +123,17 @@ class Game:
                 if "types" in data:
                     types = data["types"]
 
-                stage = data["stage"]
+                if data["stage"] == "Basic":
+                    stage = Stages.BASIC
+                elif data["stage"] == "Stage1":
+                    stage = Stages.STAGE_1
+                elif data["stage"] == "Stage2":
+                    stage = Stages.STAGE_2
+                else:
+                    stage = data["stage"]
+                    print(f"Unknown stage: {stage}")
+                    return []
+                
                 attacks = []
                 for attack in data["attacks"]:
                     attacks.append(attack)
@@ -385,7 +395,9 @@ class Game:
     # The game will be played here
     def playGame(self):
 
-
+        if self.debugEvents:
+            print(f"Starting game: {self.GAMES}")
+        
         while self.GAMES < self.MAX_SIMULATED_GAMES:
 
             # Currently the reset function fully resets a deck to zero
@@ -395,14 +407,20 @@ class Game:
             self.GAMES += 1
 
             # Create temp deck
+            if self.debugEvents:
+                print(f"Creating decks")
             # This is important until I code an actual deck (it's going to be a pain manually coding every card..)
             self.Player1.deck = self.createFakeDeck3()
             self.Player2.deck = self.createFakeDeck3()
 
+            if self.debugEvents:
+                print(f"Shuffling decks")
             # shuffle player's decks
             self.Player1.deck = self.shuffleDeck(self.Player1.deck)
             self.Player2.deck = self.shuffleDeck(self.Player2.deck)
 
+            if self.debugEvents:
+                print(f"P1 Draw initial")
             # draw cards + ensure a basic pokemon is drawn
             p1_reshuffles = 0
             valid_cards = []
@@ -415,6 +433,7 @@ class Game:
                 # put the cards in the hand back into the deck and shuffle it. then draw 7
                 for card in self.Player1.cards:
                     self.Player1.deck.append(self.Player1.cards.pop(0))
+                
                 self.Player1.shuffleDeck()
 
                 self.Player1.drawCard(7)
@@ -422,7 +441,9 @@ class Game:
                 if len(valid_cards) > 0:
                     break
                 
-                
+            if self.debugEvents:
+                print(f"P2 Draw initial")
+
             p2_reshuffles = 0
             valid_cards = []
             self.Player2.drawCard(self.rules.INITIAL_CARDS_DRAWN)
@@ -439,7 +460,9 @@ class Game:
                 valid_cards = self.Player2.getBasicCardsAvailable()
                 if len(valid_cards) > 0:
                     break
-            
+            if self.debugEvents:
+                print(f"Drawing cards")
+
             # extra card to the other player for each reshuffles
             self.Player1.drawCard(p2_reshuffles)
             self.Player2.drawCard(p1_reshuffles)
@@ -448,7 +471,8 @@ class Game:
             # who begins, track it, set to true 
             self.setInitialPlayer()
             if self.debugEvents:
-                print(f"self.GAMES: {self.GAMES}")
+                print(f"Setup done. init")
+
             while not self.gameFinished:
                 
                 # Current game turns
