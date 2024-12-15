@@ -32,6 +32,7 @@ class PokemonType(Enum):
     DRAGON    = 8
     ITEM      = 9
     SUPPORTER = 10
+    NONE      = 11
 
 class Energy:
     def __init__(self, type:PokemonType, quantity=1):

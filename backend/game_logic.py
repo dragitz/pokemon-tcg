@@ -5,6 +5,8 @@ from .pokemon_card import *
 from .enums import *
 
 import lupa
+import json
+import os
 
 
 
@@ -70,41 +72,82 @@ class Game:
     # see createFakeDeck() for a temp replacement
     def loadDeck(self):
         pass
-        
-    def createFakeDeck2(self):
-        fakeDeck = []
-        DECK_SIZE = self.rules.DECK_SIZE
-        for q in range(0,DECK_SIZE):
-                
-                # How many coinfilps the move does
-                TOTAL_COINFLIPS = random.randint(0,3)
-                
-                move_1 = Move(
-                    before_attack=f"""
-                    function()
-                        
-                        damage = damage + 30 * heads
-                        
-                    end
-                    """,
-                    after_attack="",
-                    move_type="Attack", # note: currently unused
-                    energy_cost=1,
-                    damage=50,
-
-                    coinflips=TOTAL_COINFLIPS,
-                )
-                #card = PokemonCard(q,False,0,random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]),move_1)
-                card = PokemonCard(q, False, Stages.BASIC, random.choice([100,120,140,160,180,110,130,150,170,190,200,210,220,230,240]), move_1, PokemonType.GRASS, CardType.MONSTER)
-                
-                fakeDeck.append(card)
-
-        return fakeDeck
     
-    def createFakeDeck3(self):
+    def pickRandomFile(self):
         # randomly load a card from the db
+        folder = "assets/cards"
+        all_files = os.listdir(folder)
 
-        pass
+        json_files = []
+        for file in all_files:
+            if file.endswith(".json"):
+                json_files.append(file)
+        
+        random_file = random.choice(json_files)
+        file_path = os.path.join(folder, random_file)
+        return file_path
+    
+    # generate random decks
+    def createFakeDeck3(self):
+        fake_deck = []
+        for q in range(0,self.rules.DECK_SIZE):
+            file = self.pickRandomFile()
+            
+            with open(file) as json_file:
+                data = json.load(json_file)
+            
+            # data of card
+            if "category" not in data:
+                print(f"Card: {file} does not contain category")
+                return
+            if "name" not in data:
+                print(f"Card: {file} does not contain name")
+                return
+
+            Category = CategoryType.NONE
+            
+            
+            if data["category"] == "Pokemon":
+                Category = CategoryType.POKEMON
+            elif data["category"] == "Item":
+                Category = CategoryType.ITEM
+            elif data["category"] == "Trainer":
+                Category = CategoryType.TRAINER
+
+            Name = data["name"]
+            print(Name, data["category"])
+            
+            if Category == CategoryType.POKEMON:
+                maxHp = data["hp"]
+                types = CardType.NONE
+                if "types" in data:
+                    types = data["types"]
+
+                stage = data["stage"]
+                attacks = []
+                for attack in data["attacks"]:
+                    attacks.append(attack)
+                retreat = data["retreat"]
+            else:
+                maxHp = 0
+                types = []
+                stage = Stages.NONE
+                attacks = []
+                retreat = 0
+
+            evolveFrom = ""
+            if "evolveFrom" in data:
+                evolveFrom = data["evolveFrom"]
+
+            weakness = PokemonType.NONE
+            isHex = False
+
+            card = PokemonCard(Category, Name, maxHp, types, stage, attacks, retreat, evolveFrom, weakness, isHex)
+            fake_deck.append(card)
+        
+        return fake_deck
+
+        
     #####################################################
 
     def _get_ally_pokemon(self,player:Player):
@@ -353,8 +396,8 @@ class Game:
 
             # Create temp deck
             # This is important until I code an actual deck (it's going to be a pain manually coding every card..)
-            self.Player1.deck = self.createFakeDeck2()
-            self.Player2.deck = self.createFakeDeck2()
+            self.Player1.deck = self.createFakeDeck3()
+            self.Player2.deck = self.createFakeDeck3()
 
             # shuffle player's decks
             self.Player1.deck = self.shuffleDeck(self.Player1.deck)

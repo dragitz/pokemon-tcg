@@ -8,19 +8,23 @@ from lupa import LuaRuntime
 
 
 class Stages(Enum):
-    BASIC = "BASIC"
-    STAGE_1 = "STAGE_1"
-    STAGE_2 = "STAGE_2"
+    BASIC   = 1
+    STAGE_1 = 2
+    STAGE_2 = 3
+    NONE    = 99
     #STAGE_3 = "STAGE_3"
     #STAGE_4 = "STAGE_4"
     
 class CardType(Enum):
     MONSTER = 0
     ITEM    = 1
+    NONE    = 99
 
-class Category(Enum):
+class CategoryType(Enum):
     POKEMON = 0
     ITEM    = 1
+    TRAINER = 2
+    NONE    = 99
 
 
 class Move:
@@ -81,9 +85,9 @@ class Move:
         #print(f"Attack {self.damage}  -  self._TotalDamage {self._TotalDamage}")
 
 class PokemonCard:
-    def __init__(self, CategoryType:Category, name:str, maxHp:int, types, stage:Stages, attacks, retreatCost:int, evolveFrom:str, weaknesses:PokemonType, isEx:bool) :
+    def __init__(self, Category:CategoryType, name:str, maxHp:int, types, stage:Stages, attacks, retreatCost:int, evolveFrom:str, weaknesses:PokemonType, isEx:bool) :
 
-        self.category = CategoryType
+        self.category = Category
         self.name = name
         self.hp = maxHp
         self.maxHp = maxHp
