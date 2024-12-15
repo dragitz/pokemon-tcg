@@ -19,11 +19,14 @@ class Player:
         self.ActiveCard = None
         self.Bench = []
 
+        self.end_turn = False
+
         self.energy = 0
         self.localGameTurnWins = 0
 
         self.valid_actions = []
-        self.end_turn = False
+        
+        self.possible_evolutions = []
         
     
     def placeCard(self):

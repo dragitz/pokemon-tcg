@@ -13,13 +13,18 @@ import os
 ############################################################
 ############################################################
 ############################################################
-
+class Replay:
+    def __init__(self):
+        self.games = {}
     
 class Game:
     def __init__(self):
         self.game_id = 0
         
         self.rules = Rules()
+
+        #self.replay = Replay()
+        #self.actionLog = []
 
         self.PlayerTurn = 0
 
@@ -224,25 +229,51 @@ class Game:
         print(f"placeHandCardOnBench::This should not get hit, wtf? isSetup: {self.isSetup}")
         return
 
+    # ensure pokemon can not be evolved during the turn the original card has been placed
+    def getPossibleEvolutions(self, player:Player):
+
+        valid_cards = []
+        for pokemon in player.cards:
+            if player.ActiveCard.name == pokemon.evolveFrom and player.ActiveCard.placed_turn != self.turns:
+                valid_cards.append(pokemon)
+            
+            for current_bench in player.Bench:
+                if current_bench.name == pokemon.evolveFrom and current_bench.placed_turn != self.turns:
+                    valid_cards.append(pokemon)
         
+        return valid_cards
+
+    # returns location of pokemon
+    # return active, benchSlot
+    def findPokemonByName(self, player:Player, name):
+        if player.ActiveCard.name == name:
+            return True, 0
+        
+        i = 0
+        for card in player.Bench:
+            if card.name == name:
+                return False, i
+            i += 1
+        
+        print("Error: couldn't find evolution on the player's board")
+        return False, 99
 
 
-
-    def getBench(self, player:Player):
-        pass
-    
 
     def executeAction(self, player:Player, actionId:int, opponent:Player):
         
+
         # this will kill the infinite loop
         if actionId == Actions.END_TURN:
             player.end_turn = True
             return    
         
-        #print(f"Action: {actionId},   player: {player.name},   player.end_turn: {player.end_turn}")
         if self.debugEvents:
             print(f"{player.name},   Action: {actionId}            turn: {self.turns}")
-        
+            # dev note: here we should collect replay data
+            #           i'm not fully happy about the decisions in general
+            #           i would like to visually see the decisions to figure out if my code does indeed work (so far it seems so)
+                
 
         if actionId == Actions.PLACE_ACTIVE:
             self.placeActiveCard(player)
@@ -273,6 +304,44 @@ class Game:
             self.giveEnergy(player)
             player.energy = 0
             return
+
+        # When a Pokémon evolves, it keeps its existing damage but resets all other effects, such as status conditions or effects from Trainer cards.
+        # Evolution must follow the hierarchy shown on the card (e.g., Basic → Stage 1 → Stage 2).
+        # You cannot evolve a Pokémon if it has a status condition (e.g., Paralysis, Sleep). However, you can evolve if it is Poisoned or Burned.
+        # Evolving removes all Special Conditions (e.g., Poison, Paralysis, etc.).
+        if actionId == Actions.EVOLVE:
+            if len(player.possible_evolutions) == 0:
+                print("Actions.EVOLVE: size zero (should not happen)")
+                return
+            # dev note: let the ai choose
+            chosen_evolution = random.choice(player.possible_evolutions)
+            chosen_index = player.possible_evolutions.index(chosen_evolution)
+
+            # remove evolution card from hand
+            hand_card = player.possible_evolutions.pop(chosen_index)
+            evolution_name = hand_card.evolveFrom
+            
+            # find pokemon on the board
+            active, benchSlot = self.findPokemonByName(player, evolution_name)
+            
+            # store info about previous card
+            # dev note: implement more logic regarding buffs and debuffs
+            hand_card.attackDisabled = False
+
+            # swap the cards
+            if active:
+                hand_card.energy = player.ActiveCard.energy
+                hand_card.hp = hand_card.maxHp - (player.ActiveCard.maxHp - player.ActiveCard.maxHp)
+                
+                player.ActiveCard = hand_card
+                return
+            else:
+                hand_card.energy = player.Bench[benchSlot].energy
+                hand_card.hp = hand_card.maxHp - (player.Bench[benchSlot].maxHp - player.Bench[benchSlot].maxHp)
+                
+                player.Bench[benchSlot] = hand_card
+                return
+
 
 
         
@@ -348,7 +417,11 @@ class Game:
                     valid_actions.append(Actions.ATTACK)
                     
 
-            # get evolutions in hand and check if that card can be 
+            # get evolutions in hand and check if that card can be evolved
+            player.possible_evolutions = self.getPossibleEvolutions(player)
+            if len(player.possible_evolutions) > 0:
+                valid_actions.append(Actions.EVOLVE)
+
             # to be coded:
             """
             RETREAT     <-- swap position of your active pokemon with one in the bench

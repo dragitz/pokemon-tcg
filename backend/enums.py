@@ -40,8 +40,11 @@ class Energy:
         self.quantity = quantity
         
 
-
-
+class TargetSlots(Enum):
+    ACTIVE  = 0
+    BENCH_1 = 1
+    BENCH_2 = 2
+    BENCH_3 = 3
 
 
 
