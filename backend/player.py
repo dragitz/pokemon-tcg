@@ -37,6 +37,9 @@ class Player:
         self.ActiveCard = card      # <-- hardcoded slot
 
         #print("card placed by player id: ",self.id)
+    
+    
+        
     def shuffleDeck(self):
         deck = self.deck
         for i in range(len(deck)):

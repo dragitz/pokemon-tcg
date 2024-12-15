@@ -97,6 +97,9 @@ class PokemonCard:
         self.stage = stage
 
         self.attacks = []
+        for attack in attacks: # dev note: finish this
+            continue
+
         self.retreatCost = retreatCost
         self.evolveFrom = evolveFrom
         self.weaknesses = weaknesses

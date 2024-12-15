@@ -134,6 +134,12 @@ class Game:
                     print(f"Unknown stage: {stage}")
                     return []
                 
+                # dev note: properly handle this in pokemon_card
+                abilities = []
+                if "abilities" in data:
+                    for ability in data["abilities"]:
+                        abilities.append(ability)
+                
                 attacks = []
                 for attack in data["attacks"]:
                     attacks.append(attack)
@@ -142,6 +148,7 @@ class Game:
                 maxHp = 0
                 types = []
                 stage = Stages.NONE
+                abilities = []
                 attacks = []
                 retreat = 0
 
@@ -326,7 +333,7 @@ class Game:
             
             # check if active pokemon can attack (test method)
             if not player.ActiveCard.attackDisabled and opponent.ActiveCard is not None:
-                if player.ActiveCard.energy >= player.ActiveCard.move_1.energy_cost:
+                if player.ActiveCard.energy >= len(player.ActiveCard.attacks[0].cost):
                     # valid move has been found
                     valid_actions.append(Actions.ATTACK)
                     
