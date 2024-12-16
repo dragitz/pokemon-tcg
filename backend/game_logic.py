@@ -14,8 +14,17 @@ import os
 ############################################################
 class Replay:
     def __init__(self):
-        self.games = {}
+        self.actionLog = []
     
+    def saveReplay(self, name):
+        with open(name, "w") as file:
+            json.dump(self.actionLog, file, indent=2)
+    
+    def loadReplay(self, name):
+        with open(name, "r") as file:
+            self.actionLog = json.loads(name)
+
+
 class Game:
     def __init__(self):
         self.game_id = 0

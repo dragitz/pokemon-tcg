@@ -36,7 +36,9 @@ class Player:
         if self.PlayerType == PlayerType.BOT_RANDOM:
             return random.choice(options)
         
-
+        # temp solution
+        return random.choice(options)
+        # dev note: implement qagent in the future and player inputs (will need a basic ui)
     
     def placeCard(self):
         
