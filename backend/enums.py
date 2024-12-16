@@ -1,6 +1,11 @@
 import random
 from enum import Enum
 
+class PlayerType(Enum):
+    PLAYER      = 0
+    BOT_RANDOM  = 1
+    BOT_QAGENT  = 2
+
 class Actions(Enum):
     SET_ENERGY   = 0
     PLACE_ACTIVE = 1

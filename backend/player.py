@@ -4,8 +4,9 @@ from .enums import *
 
 import random
 
+
 class Player:
-    def __init__(self, id:int, name:str, stats:PlayerStats):
+    def __init__(self, id:int, name:str, stats:PlayerStats, PType:PlayerType):
         self.id = id
         self.name = name
         self.stats = stats
@@ -27,13 +28,21 @@ class Player:
         self.valid_actions = []
         
         self.possible_evolutions = []
+
+        self.PlayerType = PType
+    
+    def decide(self, options=[]):
+
+        if self.PlayerType == PlayerType.BOT_RANDOM:
+            return random.choice(options)
         
+
     
     def placeCard(self):
         
         # Basic logic
         basic_in_hand = self.getBasicCardsInHand()
-        item = random.choice(basic_in_hand)
+        item = self.decide(basic_in_hand)
         index = basic_in_hand.index(item)
         
         card = self.cards.pop(index)

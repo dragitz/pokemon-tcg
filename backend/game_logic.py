@@ -1,6 +1,5 @@
 import random
 from .player import Player, Move
-from .move import *
 from .pokemon_card import *
 from .enums import *
 
@@ -185,7 +184,7 @@ class Game:
         
         # use brain functions to decide which pokemon should get energy
         # for now it's random
-        pokemon = random.choice(pokemons)
+        pokemon = player.decide(pokemons)
         pokemon.energy += 1
 
 
@@ -198,7 +197,7 @@ class Game:
         cards = player.getBasicCardsInHand()
         
         if len(cards) > 0: 
-            card = random.choice(cards)
+            card = player.decide(cards)
             card_index = cards.index(card)
             player.ActiveCard = player.cards.pop(card_index)
             player.ActiveCard.placed_turn = self.turns
@@ -206,7 +205,7 @@ class Game:
         
         cards = player.getBasicCardsInBench()
         if len(cards) > 0:
-            card = random.choice(cards)
+            card = player.decide(cards)
             card_index = cards.index(card)
             player.ActiveCard = player.Bench.pop(card_index)
             player.ActiveCard.placed_turn = self.turns
@@ -219,7 +218,7 @@ class Game:
         card = None
         cards = player.getBasicCardsInHand()
         if len(cards) > 0:
-            card = random.choice(cards)
+            card = player.decide(cards)
             card_index = cards.index(card)
             selected_card = player.cards.pop(card_index)
             selected_card.placed_turn = self.turns
@@ -316,7 +315,7 @@ class Game:
             player.stats.total_evolutions += 1
             
             # dev note: let the ai choose
-            chosen_evolution = random.choice(player.possible_evolutions)
+            chosen_evolution = player.decide(player.possible_evolutions)
             chosen_index = player.possible_evolutions.index(chosen_evolution)
 
             # remove evolution card from hand
@@ -355,7 +354,7 @@ class Game:
     def decideAction(self, player, opponent):
         # here we code the ai to choose something
         # right now it's pure randomness
-        actionId = random.choice(player.valid_actions)        
+        actionId = player.decide(player.valid_actions)        
         self.executeAction(player, actionId, opponent)
     
     def getValidActions(self, player:Player, opponent:Player):
