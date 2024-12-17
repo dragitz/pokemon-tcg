@@ -47,9 +47,18 @@ class Move:
         self.before_attack = before_attack
         self.after_attack = after_attack
 
+    def switch_active_with_bench(player, bench_index):
+        target_pokemon = player.Bench[bench_index]
+        target_pokemon.energy, player.ActiveCard.energy = player.ActiveCard.energy, target_pokemon.energy
+        target_pokemon.hp, player.ActiveCard.hp = player.ActiveCard.hp, target_pokemon.hp
+        
+        player.Bench[bench_index], player.ActiveCard = player.ActiveCard, target_pokemon
+
+        return player
     
-    def execute_logic(self, player, opponent):
+    def execute_logic(self, game, player, opponent):
         lua = LuaRuntime()
+
 
         if self.before_attack == "": self.before_attack = "function() end"
         lua_script_before_attack = lua.eval(self.before_attack)
@@ -57,18 +66,24 @@ class Move:
         if self.after_attack == "": self.after_attack = "function() end"
         lua_script_after_attack = lua.eval(self.after_attack)
 
+
         # Global properties that lua can access
         # eg: "lua_globals.damage" in lua will be "damage"
         lua_globals = lua.globals()
+
+        lua_globals.game = game
+        lua_globals.player = player
+        lua_globals.opponent = opponent
+
         lua_globals.damage = self.damage
-        
+
         lua_globals.heads = 0
         for i in range(self.coinflips):
             if random.randint(0,1) > 0:
                 lua_globals.heads += 1
         
         lua_globals.energy_removed = 0
-        lua_globals.self_heal      = 0
+        lua_globals.self_heal      = 0  # currently unused
 
         # execute both scripts here
         lua_script_before_attack()

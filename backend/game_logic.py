@@ -12,6 +12,8 @@ import os
 ############################################################
 ############################################################
 ############################################################
+
+
 class Replay:
     def __init__(self):
         self.actionLog = []
@@ -23,6 +25,12 @@ class Replay:
     def loadReplay(self, name):
         with open(name, "r") as file:
             self.actionLog = json.loads(name)
+
+
+
+############################################################
+############################################################
+############################################################
 
 
 class Game:
@@ -178,9 +186,6 @@ class Game:
         
         return fake_deck
 
-        
-    #####################################################
-
     def _get_ally_pokemon(self,player:Player):
         pass
     
@@ -297,7 +302,7 @@ class Game:
 
             # dev note: this is a hardcoded action (only move 1)
             move = player.ActiveCard.attacks[0]
-            move.execute_logic(player, opponent)
+            move.execute_logic(self, player, opponent)
             #player.ActiveCard.move_1.execute_logic(player, opponent)
 
             # check if we killed the opponent's active pokemon
@@ -353,12 +358,6 @@ class Game:
                 return
 
 
-
-        
-
-            
-
-        
 
     def decideAction(self, player, opponent):
         # here we code the ai to choose something
@@ -666,7 +665,13 @@ class Game:
             self.Player2.printStats()
 
 
-    
+
+
+############################################################
+############################################################
+############################################################
+
+
 
 class Rules:
     def __init__(self):
