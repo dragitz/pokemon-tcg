@@ -29,7 +29,7 @@ class CategoryType(Enum):
 
 
 class Move:
-    def __init__(self, before_attack, after_attack, move_type, energy_cost=1, damage=0, coinflips=0, debuffs=[]):
+    def __init__(self, before_attack, after_attack, activation_script, move_type, energy_cost=1, damage=0, coinflips=0, debuffs=[]):
         
         self.move_type = move_type
         
@@ -46,6 +46,7 @@ class Move:
 
         self.before_attack = before_attack
         self.after_attack = after_attack
+        self.activation_script = activation_script
 
     def switch_active_with_bench(player, bench_index):
         target_pokemon = player.Bench[bench_index]
@@ -59,6 +60,10 @@ class Move:
     def execute_logic(self, game, player, opponent):
         lua = LuaRuntime()
 
+        # mainly for cards that do not have any attacks
+        # this has priority over the other before_attack and after_attack
+        if self.activation_script == "": self.activation_script = "function() end"
+        lua_script_activation_script = lua.eval(self.activation_script)
 
         if self.before_attack == "": self.before_attack = "function() end"
         lua_script_before_attack = lua.eval(self.before_attack)
@@ -66,6 +71,7 @@ class Move:
         if self.after_attack == "": self.after_attack = "function() end"
         lua_script_after_attack = lua.eval(self.after_attack)
 
+        
 
         # Global properties that lua can access
         # eg: "lua_globals.damage" in lua will be "damage"
@@ -82,10 +88,12 @@ class Move:
             if random.randint(0,1) > 0:
                 lua_globals.heads += 1
         
-        lua_globals.energy_removed = 0
+        lua_globals.energy_removed = 0  # currently unused
         lua_globals.self_heal      = 0  # currently unused
 
-        # execute both scripts here
+        
+        # execute scripts here
+        lua_script_activation_script()
         lua_script_before_attack()
         lua_script_after_attack()    # debuffs, remove enrgy
 
@@ -130,6 +138,7 @@ class PokemonCard:
 
             move = Move(
                 attack["before_attack"], 
+                attack["after_attack"], 
                 attack["after_attack"], 
                 self.types[0], 
                 energy_cost, 
