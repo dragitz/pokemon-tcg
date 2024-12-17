@@ -29,7 +29,7 @@ class CategoryType(Enum):
 
 
 class Move:
-    def __init__(self, before_attack, after_attack, activation_script, move_type, energy_cost=1, damage=0, coinflips=0, debuffs=[]):
+    def __init__(self, before_attack, after_attack, activation_script, upon_turn_change, precondition, move_type, energy_cost=1, damage=0, coinflips=0, debuffs=[]):
         
         self.move_type = move_type
         
@@ -44,9 +44,13 @@ class Move:
         self._TotalDamage = 0
         self._TotalHealing = 0
 
+        self.upon_turn_change = upon_turn_change
+        self.activation_script = activation_script
         self.before_attack = before_attack
         self.after_attack = after_attack
-        self.activation_script = activation_script
+
+        self.precontition = precondition
+        
 
     def switch_active_with_bench(player, bench_index):
         target_pokemon = player.Bench[bench_index]
@@ -59,7 +63,9 @@ class Move:
     
     def execute_logic(self, game, player, opponent):
         lua = LuaRuntime()
-
+        if self.upon_turn_change == "": self.upon_turn_change = "function() end"
+        lua_script_upon_turn_change = lua.eval(self.upon_turn_change)
+            
         # mainly for cards that do not have any attacks
         # this has priority over the other before_attack and after_attack
         if self.activation_script == "": self.activation_script = "function() end"
@@ -93,6 +99,7 @@ class Move:
 
         
         # execute scripts here
+        lua_script_upon_turn_change()
         lua_script_activation_script()
         lua_script_before_attack()
         lua_script_after_attack()    # debuffs, remove enrgy
