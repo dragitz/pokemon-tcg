@@ -433,14 +433,8 @@ class Game:
             
             # check if active pokemon can attack (test method)
             # dev note: this is a WIP
-            move = player.ActiveCard.attacks[0]
-            if player.ActiveCard.energy > 0:
-                print("")
-                print(player.ActiveCard.energy, "    ", move.energy_cost)
-                print("")
-            
             if not player.ActiveCard.attackDisabled and opponent.ActiveCard is not None and len(player.ActiveCard.attacks) > 0:
-                
+                move = player.ActiveCard.attacks[0]
                 if player.ActiveCard.energy >= move.energy_cost:
                     # valid move has been found
                     valid_actions.append(Actions.ATTACK)
