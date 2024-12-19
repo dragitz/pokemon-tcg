@@ -6,6 +6,7 @@ from .enums import *
 import lupa
 import json
 import os
+import time
 
 
 
@@ -116,7 +117,7 @@ class Game:
     def createFakeDeck3(self):
         fake_deck = []
         for q in range(0,self.rules.DECK_SIZE):
-            file = self.pickForcedCard()
+            file = self.pickRandomFile()
             
             with open(file) as json_file:
                 data = json.load(json_file)
