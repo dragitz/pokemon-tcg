@@ -46,7 +46,7 @@ class Player:
         self.PlayerAction = 99
 
         while self.PlayerAction == 99:
-            time.sleep(0.1)  # Prevent CPU overuse with a short sleep
+            time.sleep(0.1)
 
         # Check if the selected action is valid
         if self.PlayerAction in options:

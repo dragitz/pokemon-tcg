@@ -29,7 +29,7 @@ class CategoryType(Enum):
 
 
 class Move:
-    def __init__(self, before_attack, after_attack, activation_script, upon_turn_change, precondition, move_type, energy_cost=1, damage=0, coinflips=0, debuffs=[]):
+    def __init__(self, before_attack, after_attack, activation_script, upon_turn_change, precondition, move_type, energy_cost, damage=0, coinflips=0, debuffs=[]):
         
         self.move_type = move_type
         
@@ -148,17 +148,24 @@ class PokemonCard:
 
             #self, before_attack, after_attack, activation_script, upon_turn_change, precondition, move_type, energy_cost=1, damage=0, coinflips=0, debuffs=[]
 
+            #placeholders
+            activation_script = ""
+            upon_turn_change = ""
+            precondition = ""
+            move_type = ""
             move = Move(
                 attack["before_attack"], 
-                attack["after_attack"], 
-                "",
-                "",
-                self.types[0], 
-                energy_cost, 
-                damage, 
-                coinflips, 
+                attack["after_attack"],
+                activation_script,
+                upon_turn_change,
+                precondition,
+                move_type,
+                energy_cost,
+                damage,
+                coinflips,
                 debuffs
                 )
+
             self.attacks.append(move)
 
         self.retreatCost = retreatCost

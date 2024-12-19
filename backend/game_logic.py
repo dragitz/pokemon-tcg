@@ -109,11 +109,14 @@ class Game:
         file_path = os.path.join(folder, random_file)
         return file_path
     
+    def pickForcedCard(self):
+        return "assets/cards/Zubat.json"
+
     # generate random decks
     def createFakeDeck3(self):
         fake_deck = []
         for q in range(0,self.rules.DECK_SIZE):
-            file = self.pickRandomFile()
+            file = self.pickForcedCard()
             
             with open(file) as json_file:
                 data = json.load(json_file)
@@ -240,7 +243,9 @@ class Game:
         cards = player.getBasicCardsInHand()
         if len(cards) > 0:
             card = player.decide(cards)
-            card_index = cards.index(card)
+        
+            card_index = player.cards.index(card)
+            
             selected_card = player.cards.pop(card_index)
             selected_card.placed_turn = self.turns
             player.Bench.append(selected_card)
@@ -415,7 +420,8 @@ class Game:
 
             # Swap active pokemon with one in the bench
             if player.ActiveCard.energy >= player.ActiveCard.retreatCost and free_bench_slots > 0:
-                valid_actions.append(Actions.RETREAT)
+                if 1 == 2:
+                    valid_actions.append(Actions.RETREAT)
             
             # check if player can place any pokemon in the bench
             # check if player has basic pokemons that can be moved from either deck or bench
@@ -427,8 +433,14 @@ class Game:
             
             # check if active pokemon can attack (test method)
             # dev note: this is a WIP
+            move = player.ActiveCard.attacks[0]
+            if player.ActiveCard.energy > 0:
+                print("")
+                print(player.ActiveCard.energy, "    ", move.energy_cost)
+                print("")
+            
             if not player.ActiveCard.attackDisabled and opponent.ActiveCard is not None and len(player.ActiveCard.attacks) > 0:
-                move = player.ActiveCard.attacks[0]
+                
                 if player.ActiveCard.energy >= move.energy_cost:
                     # valid move has been found
                     valid_actions.append(Actions.ATTACK)
