@@ -3,7 +3,7 @@ from .pokemon_card import *
 from .enums import *
 
 import random
-
+import time
 
 class Player:
     def __init__(self, id:int, name:str, stats:PlayerStats, PType:PlayerType):
@@ -30,27 +30,36 @@ class Player:
         self.possible_evolutions = []
 
         self.PlayerType = PType
+        self.PlayerAction = 999
     
+    def decide_pokemon(self):
+        pass
+
+
     def decide(self, options=[]):
-
         if self.PlayerType == PlayerType.BOT_RANDOM:
+            time.sleep(0.1)
             return random.choice(options)
-        
-        # temp solution
-        return random.choice(options)
-        # dev note: implement qagent in the future and player inputs (will need a basic ui)
-    
-    def placeCard(self):
-        
-        # Basic logic
-        basic_in_hand = self.getBasicCardsInHand()
-        item = self.decide(basic_in_hand)
-        index = basic_in_hand.index(item)
-        
-        card = self.cards.pop(index)
-        self.ActiveCard = card      # <-- hardcoded slot
 
-        #print("card placed by player id: ",self.id)
+        # Wait for the player to select an action
+        print("Waiting for player action...")
+        self.PlayerAction = 99
+
+        while self.PlayerAction == 99:
+            time.sleep(0.1)  # Prevent CPU overuse with a short sleep
+
+        # Check if the selected action is valid
+        if self.PlayerAction in options:
+            action = self.PlayerAction
+            self.PlayerAction = 99  # Reset for the next decision
+            print(f"Player action: {action}")
+            return action
+        else:
+            print(f"Invalid action: {self.PlayerAction}")
+            self.PlayerAction = 99
+            return random.choice(options)  # Fallback to a valid option
+
+
     
     
         
@@ -76,13 +85,23 @@ class Player:
             self.cards.append(self.deck.pop(0))
 
     def getBasicCardsInHand(self):
+        return [card for card in self.cards if card.stage == Stages.BASIC and card.stage != Stages.NONE]
+
         valid = []
-        for i in range(len(self.cards)):
-            if self.cards[i].stage == Stages.BASIC:
-                valid.append(self.cards[i])
+        #for i in range(len(self.cards)):
+        #    if self.cards[i].stage == Stages.BASIC:
+        #        valid.append(self.cards[i])
+        
+    
+        for card in self.cards:
+            if card.stage == Stages.BASIC:
+                valid.append(card)
+                print("Valid: ",card.name)
+
         return valid
     
     def getBasicCardsInBench(self):
+        return [card for card in self.Bench if card.stage == Stages.BASIC]
         valid_basic_bench = []
 
         for card in self.Bench:

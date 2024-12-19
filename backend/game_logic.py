@@ -200,6 +200,8 @@ class Game:
         # for now it's random
         pokemon = player.decide(pokemons)
         pokemon.energy += 1
+        if self.debugEvents:
+            print(f"[?] Gave energy to: {pokemon.name} ~ energy: {pokemon.energy}")
 
 
     def placeActiveCard(self, player:Player):
@@ -215,6 +217,9 @@ class Game:
             card_index = cards.index(card)
             player.ActiveCard = player.cards.pop(card_index)
             player.ActiveCard.placed_turn = self.turns
+
+            if self.debugEvents:
+                print(f"         [?] Placed1: {player.ActiveCard.name}  {player.ActiveCard.stage}")
             return
         
         cards = player.getBasicCardsInBench()
@@ -223,6 +228,8 @@ class Game:
             card_index = cards.index(card)
             player.ActiveCard = player.Bench.pop(card_index)
             player.ActiveCard.placed_turn = self.turns
+            if self.debugEvents:
+                print(f"         [?] Placed2: {player.ActiveCard.name}  {player.ActiveCard.stage}")
             return
 
         print("placeActiveCard::This should not get hit, wtf?")
@@ -237,6 +244,8 @@ class Game:
             selected_card = player.cards.pop(card_index)
             selected_card.placed_turn = self.turns
             player.Bench.append(selected_card)
+            if self.debugEvents:
+                print(f"         [?] Placed3: {selected_card.name}  {selected_card.stage}")
             return
         
         print(f"placeHandCardOnBench::This should not get hit, wtf? isSetup: {self.isSetup}")
@@ -275,18 +284,18 @@ class Game:
 
     def executeAction(self, player:Player, actionId:int, opponent:Player):
         
-
-        # this will kill the infinite loop
-        if actionId == Actions.END_TURN:
-            player.end_turn = True
-            return    
-        
         if self.debugEvents:
             print(f"{player.name},   Action: {actionId}            turn: {self.turns}")
             # dev note: here we should collect replay data
             #           i'm not fully happy about the decisions in general
             #           i would like to visually see the decisions to figure out if my code does indeed work (so far it seems so)
-                
+          
+        # this will kill the infinite loop
+        if actionId == Actions.END_TURN:
+            player.end_turn = True
+            return    
+        
+      
 
         if actionId == Actions.PLACE_ACTIVE:
             self.placeActiveCard(player)
@@ -377,10 +386,9 @@ class Game:
             else:
                 return []  # end game
         
+        # During the setup, try to place at least 2 pokemons on the bench
+        # else, end turn
         if self.isSetup:
-
-            # During the setup, try to place at least 2 pokemons on the bench
-            # else, end turn
             if len(player.getBasicCardsAvailable()) > 0 and free_bench_slots < 2:
                 return [Actions.PLACE_BENCH]
             else:
@@ -399,8 +407,8 @@ class Game:
             #       in this simulation energies are all neutral (for now)
             # note: still checking for the active card, even though at this point the player should have one (because of the above checks)
             if player.energy > 0 and (player.ActiveCard is not None or free_bench_slots > 0):
-                    valid_actions.append(Actions.SET_ENERGY)
-                    return [Actions.SET_ENERGY]
+                valid_actions.append(Actions.SET_ENERGY)
+            
 
             # Always available
             valid_actions.append(Actions.END_TURN)

@@ -120,7 +120,7 @@ class PokemonCard:
     def __init__(self, Category:CategoryType, name:str, maxHp:int, types, stage:Stages, attacks, retreatCost:int, evolveFrom:str, weaknesses:PokemonType, isEx:bool) :
 
         self.category = Category
-        self.name = name
+        self.name = name.replace(" ","_")
         self.hp = maxHp
         self.maxHp = maxHp
         self.health_bar = 100   # placeholder, will be updated upon taking damage
@@ -140,13 +140,19 @@ class PokemonCard:
                 damage = 0
             
             # dev note: to be coded
-            coinflips = 0
+            if "coinflips" in attack:
+                coinflips = attack["coinflips"]
+            else:
+                coinflips = 0
             debuffs = []
+
+            #self, before_attack, after_attack, activation_script, upon_turn_change, precondition, move_type, energy_cost=1, damage=0, coinflips=0, debuffs=[]
 
             move = Move(
                 attack["before_attack"], 
                 attack["after_attack"], 
-                attack["after_attack"], 
+                "",
+                "",
                 self.types[0], 
                 energy_cost, 
                 damage, 
@@ -168,7 +174,8 @@ class PokemonCard:
         self.attackDisabled = False
 
         # Other
-        self.asset = "assets/images"+self.name+".png"
+        self.asset = "assets\images\\"+self.name+".png"
+        #print(self.asset)
 
         
     
